@@ -1,0 +1,25 @@
+rule 公积金(person As 员工) when 员工.任职时间 > 5
+	公积金 = 员工.基本工资 * 0.22
+end rule
+
+
+rule 公积金 alias 超过五年公积金(person As 员工) when 员工.任职时间 > 5
+	公积金 = 员工.基本工资 * 0.22
+end rule
+
+rule 公积金(person As 员工) when 员工.任职时间 > 10
+	公积金 = 员工.基本工资 * 0.22
+end rule
+
+
+rule 公积金(person As 员工) when 员工.任职时间 > 5 and 员工.档级 = 22
+	公积金 = 员工.基本工资 * 0.22
+end rule
+
+
+
+rule 如存在 alias，在 module.members 里登记为一个函数，可以直接调用，函数中仍取规则名作为返回值变量名称，所以叫 alias。
+
+rule 调用时，when 语句部分从最后一条往上走，也就是后面的rule覆盖前面的rule。
+
+匹配 when，然后将 List<Statemnet> 放入调用，期间不发生压栈，不是调用另一个函数。
