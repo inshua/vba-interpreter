@@ -10,10 +10,10 @@ coding........
 * 目前已经实现了绝大部分vba语言特性（传值传址、集合、默认方法、默认属性、类、implement、事件、调试等等）
 * 不准备实现文件等等古老的命令语句
 * 扩充了如下java交互的特性：
-** CreateObject("java class", construtor arguments)
-** java.util.Map 对象可通过 !key 访问成员
-** java.util.List 对象可通过 (index) 访问成员
-** bean 可使用属性方式访问
+0. CreateObject("java class", construtor arguments)
+0. java.util.Map 对象可通过 !key 访问成员
+0. java.util.List 对象可通过 (index) 访问成员
+0. bean 可使用属性方式访问
 * 设计了规则语法，使之可以扮演规则引擎（这是本项目的创建动机）：
 
 ```vb
