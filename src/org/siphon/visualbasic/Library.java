@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.siphon.visualbasic.compile.NameIndex;
 import org.siphon.visualbasic.runtime.ModuleInstance;
 
 /**
@@ -19,20 +20,26 @@ public class Library extends VbDecl {
 	
 	public Map<String, VbTypeDecl> types = new HashMap<>();
 	
+	public final NameIndex names = new NameIndex();
+	
 	public Library(String name){
 		super(null);
 		this.name = name;
+		this.names.addDecl(this);
 	}
 	
 	public void addModule(ModuleDecl moduleDecl){
 		this.modules.put(moduleDecl.name.toUpperCase(), moduleDecl);
 		if(moduleDecl instanceof ClassModuleDecl){
 			this.addType(new ClassTypeDecl(this, (ClassModuleDecl) moduleDecl));
+		} else {
+			this.names.addDecl(moduleDecl);
 		}
 	}
 	
 	public void addType(VbTypeDecl typeDecl) {
 		this.types.put(typeDecl.upperCaseName(), typeDecl);
+		this.names.addDecl(typeDecl);
 	}
 
 	@Override
@@ -77,5 +84,6 @@ public class Library extends VbDecl {
 		
 		return null;
 	}
+	
 	
 }

@@ -67,4 +67,52 @@ public class Math {
 			random.set(new Random((Long)(VbValue.CLng(seed).value)));
 		}
 	}
+	
+	@VbMethod("Function Atn(Number As Double) As Double")
+	public static double atn(double number){
+		return java.lang.Math.atan(number);
+	}
+	
+	@VbMethod("Function Cos(Number As Double) As Double")
+	public static double cos(double number){
+		return java.lang.Math.cos(number);
+	}
+	
+	@VbMethod("Function Exp(Number As Double) As Double")
+	public static double exp(double number){
+		return java.lang.Math.exp(number);
+	}
+	
+	@VbMethod("Function Log(Number As Double) As Double")
+	public static double log(double number){
+		return java.lang.Math.log(number);
+	}
+	
+	@VbMethod("Function Round(Number As Double, Optional NumDigitsAfterDecimal As Long) As Double")
+	public static double Round(double number, VbValue NumDigitsAfterDecimal){
+		if(NumDigitsAfterDecimal.isMissing() == false){
+			int n = ((Long)(NumDigitsAfterDecimal.value)).intValue();
+			int t = (int) java.lang.Math.pow(10, n);
+			number *= t;
+			return java.lang.Math.round(number) / t;
+		} else {
+			return java.lang.Math.round(number);
+		}
+	}
+	
+	@VbMethod("Function Sgn(Number)")
+	public static double sgn(VbValue number){
+		return Comparision.compare(number, new VbValue(VbVarType.VbInteger, 0));
+	}
+	
+	@VbMethod("Function Sin(Number As Double) As Double")
+	public static double sin(double number){
+		return java.lang.Math.sin(number);
+	}
+	
+	@VbMethod("Function Tan(Number As Double) As Double")
+	public static double tan(double number){
+		return java.lang.Math.tan(number);
+	}
+	
 }

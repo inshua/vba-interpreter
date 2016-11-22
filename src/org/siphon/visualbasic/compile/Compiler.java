@@ -884,13 +884,13 @@ public class Compiler {
 	}
 
 	private void addErrObjectDecl(MethodDecl method) {
-		VbVarType varType = vba.getErrorVarType();
-		VarDecl varDecl = new VarDecl(method.library, method.module);
-		varDecl.module = method.module;
-		varDecl.methodDecl = method;
-		varDecl.varType = varType;
-		varDecl.name = "Err";
-		method.addVariable(varDecl);
+//		VbVarType varType = vba.getErrorVarType();
+//		VarDecl varDecl = new VarDecl(method.library, method.module);
+//		varDecl.module = method.module;
+//		varDecl.methodDecl = method;
+//		varDecl.varType = varType;
+//		varDecl.name = "Err";
+//		method.addVariable(varDecl);
 	}
 
 	private List<ArgumentDecl> parseArgs(ArgListContext argList, MethodDecl method) {
@@ -1343,6 +1343,9 @@ public class Compiler {
 		if (asType != null) {
 			type = asType.type();
 		}
+		if(type != null && "ErrObject".equalsIgnoreCase(type.getText())){
+			System.out.println();
+		}
 		return parseType(type, typeHint, module);
 	}
 
@@ -1411,8 +1414,7 @@ public class Compiler {
 		}
 	}
 
-	private VbVarType findType(ComplexTypeContext types, ModuleDecl module) throws CompileException {
-
+	private VbVarType findTypeInGlobal(ComplexTypeContext types, ModuleDecl module) throws CompileException {
 		try {
 			VbTypeDecl type = names.findAccessibleType(types.getText(), module.library);
 			if (type instanceof EnumDecl) {
@@ -1430,6 +1432,28 @@ public class Compiler {
 			throw module.newCompileException(types, CompileException.AMBIGUOUS_IDENTIFIER, types);
 		} catch (NotFoundException e) {
 			throw module.newCompileException(types, CompileException.UNKOWN_VALUE, types);
+		}
+
+	}
+	
+	private VbVarType findType(ComplexTypeContext types, ModuleDecl module) throws CompileException {
+		try {
+			VbTypeDecl type = module.library.names.findAccessibleType(types.getText(), module.library);
+			if (type instanceof EnumDecl) {
+				return new VbVarType(VbVarType.vbLong, (VbTypeDecl) type, null, null);
+			} else if (type instanceof UdtDecl) {
+				return new VbVarType(VbVarType.vbUserDefinedType, type, null, null);
+			} else if (type instanceof ClassTypeDecl) {
+				return new VbVarType(VbVarType.vbObject, type, null, null);
+			} else {
+				throw new ImpossibleException();
+			}
+		} catch (NotMatchException e) {
+			throw module.newCompileException(types, CompileException.SHOULD_BE, types, "data type");
+		} catch (AmbiguousIdentifierException e) {
+			throw module.newCompileException(types, CompileException.AMBIGUOUS_IDENTIFIER, types);
+		} catch (NotFoundException e) {
+			return findTypeInGlobal(types, module);
 		}
 
 	}

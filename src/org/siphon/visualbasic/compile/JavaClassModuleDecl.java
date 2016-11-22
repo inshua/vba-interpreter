@@ -64,10 +64,11 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 						String name = method.getName();
 						if((name.startsWith("get") || name.startsWith("set")) && name.length() > 3 && Character.isLowerCase(name.charAt(3)) == false){
 							JavaMethod m = new JavaMethod(lib, this, method, true);
+							m.setWithIntepreter(vbMethod.withIntepreter());
 							this.addMember(m);
 							name = m.name;
 						} else{
-							this.addMember(new JavaMethod(lib, this, method));
+							this.addMember(new JavaMethod(lib, this, method).setWithIntepreter(vbMethod.withIntepreter()));
 						}
 						if(vbMethod.isDefault()){
 							this.setDefaultMember(name);
@@ -88,11 +89,11 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 						ParseTree element = parser.moduleBodyElement().getChild(0);
 						if(element instanceof FunctionStmtContext){
 							MethodDecl methodDecl = compiler.compileMethodBaseInfo((FunctionStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
 							this.addMember(m);
 						} else if(element instanceof SubStmtContext){
 							MethodDecl methodDecl = compiler.compileMethodBaseInfo((SubStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
 							this.addMember(m);
 						} else {
 							throw new UnsupportedOperationException("cannot be " + element);

@@ -45,7 +45,7 @@ public class JavaModuleDecl extends ModuleDecl {
 				}
 				if (vbMethod != null) {
 					if (StringUtils.isEmpty(vbMethod.value())) {
-						this.addMember(new JavaMethod(lib, this, method));
+						this.addMember(new JavaMethod(lib, this, method).setWithIntepreter(vbMethod.withIntepreter()));
 					} else {
 						String decl = vbMethod.value();
 						String methodType = decl.substring(0, decl.indexOf(' '));
@@ -56,11 +56,11 @@ public class JavaModuleDecl extends ModuleDecl {
 						ParseTree element = parser.moduleBodyElement().getChild(0);
 						if (element instanceof FunctionStmtContext) {
 							MethodDecl methodDecl = compiler.compileMethodBaseInfo((FunctionStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
 							this.addMember(m);
 						} else if (element instanceof SubStmtContext) {
 							MethodDecl methodDecl = compiler.compileMethodBaseInfo((SubStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
 							this.addMember(m);
 						} else {
 							throw new UnsupportedOperationException("cannot be " + element);

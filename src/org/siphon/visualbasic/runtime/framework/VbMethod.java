@@ -11,5 +11,10 @@ public @interface VbMethod {
 	public boolean isDefault() default false;
 	public boolean isIterator() default false;
 	public boolean isDictionary() default false;
+	/**
+	 * accept Interpreter and Frame as first 2 arguments
+	 * @return
+	 */
+	public boolean withIntepreter() default false;
 	public String value() default "";
 }

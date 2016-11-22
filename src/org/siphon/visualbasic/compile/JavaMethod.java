@@ -19,6 +19,16 @@ import org.siphon.visualbasic.runtime.framework.VbParam;
 public class JavaMethod extends MethodDecl {
 
 	public final Method javaMethod;
+	private boolean withIntepreter;
+
+	public JavaMethod setWithIntepreter(boolean withIntepreter) {
+		this.withIntepreter = withIntepreter;
+		return this;
+	}
+
+	public boolean isWithIntepreter() {
+		return withIntepreter;
+	}
 
 	public JavaMethod(Library library, ModuleDecl module, Method method) {
 		super(library, module, method.getReturnType() == Void.class ? MethodType.Sub : MethodType.Function);
@@ -100,21 +110,25 @@ public class JavaMethod extends MethodDecl {
 		}
 	}
 
-	public JavaMethod(Library library, JavaModuleDecl module, MethodDecl methodDecl, Method javaMethod) {
+	public JavaMethod(Library library, JavaModuleDecl module, MethodDecl methodDecl, Method javaMethod, boolean withIntepreter) {
 		super(library, module, methodDecl.methodType);
 		this.javaMethod = javaMethod;
 		this.name = methodDecl.name;
 		this.visibility = Visibility.PUBLIC;
+		this.withIntepreter = withIntepreter; 
+		this.returnType = methodDecl.returnType;
 		for(ArgumentDecl arg : methodDecl.arguments){
 			this.arguments.add(arg);
 		}
 	}
 
-	public JavaMethod(Library library, JavaClassModuleDecl module, MethodDecl methodDecl, Method javaMethod) {
+	public JavaMethod(Library library, JavaClassModuleDecl module, MethodDecl methodDecl, Method javaMethod, boolean withIntepreter) {
 		super(library, module, methodDecl.methodType);
 		this.javaMethod = javaMethod;
 		this.name = methodDecl.name;
 		this.visibility = Visibility.PUBLIC;
+		this.withIntepreter = withIntepreter;
+		this.returnType = methodDecl.returnType;
 		for(ArgumentDecl arg : methodDecl.arguments){
 			this.arguments.add(arg);
 		}

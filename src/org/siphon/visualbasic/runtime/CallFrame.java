@@ -43,15 +43,8 @@ public class CallFrame {
 
 	public CallFrame(Map<String, RuntimeLibrary> global, ModuleInstance moduleInstance, MethodDecl method) {
 		this.libs = global;
-		RuntimeLibrary vbaRl =  (RuntimeLibrary) this.libs.get("VBA");
 		this.module = moduleInstance;
 		this.method = method;
-		if(vbaRl != null){
-			VBALibrary vba = (VBALibrary) vbaRl.getLibrary();
-			VbVariable var = method.variables.get("ERR").createVar();
-			var.value = VbValue.fromJava(this.error, var.varType, (JavaClassModuleDecl)vba.modules.get("ERROBJECT"));
-			this.local.put(var.varDecl, var);
-		}
 	}
 
 	public VbVariable locateVbVariable(VarDecl varDecl, ModuleInstance moduleInstance) {

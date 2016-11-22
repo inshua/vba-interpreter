@@ -25,7 +25,7 @@ public class Test {
 
 		// new Interpreter().executeVbProject("vba\\Prj1\\Prj1.vbp");
 
-		// new Interpreter().executeVbProject("vba\\ErrHandle\\ErrHandle.vbp");
+		new Interpreter().executeVbProject("vba\\ErrHandle\\ErrHandle.vbp");
 
 		// new Interpreter().executeVbProject("vba\\ClassTest\\ClassTest.vbp");
 
@@ -73,7 +73,7 @@ public class Test {
 		
 		//new Interpreter().executeVbProject("vba\\Interactive\\Test.vbp");
 		
-		new Interpreter().executeVbProject("vba\\Random\\Test.vbp");
+		//new Interpreter().executeVbProject("vba\\Random\\Test.vbp");
 	}
 
 }

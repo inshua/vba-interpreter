@@ -121,7 +121,7 @@ public class Interpreter {
 	 * @throws ArgumentException
 	 * @throws VbRuntimeException
 	 */
-	public VbValue callMethod(ModuleInstance runtimeModule, MethodDecl method, Object... arguments)
+	public synchronized VbValue callMethod(ModuleInstance runtimeModule, MethodDecl method, Object... arguments)
 			throws ArgumentException, VbRuntimeException {
 		assert runtimeModule != null;
 		if (method instanceof JavaMethod) {
@@ -130,10 +130,10 @@ public class Interpreter {
 				if (runtimeModule instanceof JavaModuleInstance) {
 					Object obj = ((JavaModuleInstance) runtimeModule).getInstance();
 					return VbValue.fromJava(javaMethod.javaMethod.invoke(obj,
-							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes())));
+							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
 				} else {
 					return VbValue.fromJava(javaMethod.javaMethod.invoke(null,
-							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes())));
+							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
 				}
 			} catch (IllegalAccessException | IllegalArgumentException e) {
 				e.printStackTrace();
@@ -158,21 +158,27 @@ public class Interpreter {
 		}
 	}
 
-	private Object[] toJavaArguments(Object[] arguments, JavaMethod method, Class<?>[] paramTypes) throws ArgumentException { // TODO 检查能否转换
+	private Object[] toJavaArguments(Object[] arguments, JavaMethod method, Class<?>[] paramTypes, CallFrame callFrame) throws ArgumentException { // TODO 检查能否转换
 		Map<VarDecl, VbVariable> args = bindArguments(method, arguments);
 		
 		Object[] result = new Object[paramTypes.length];
+		int offset = 0;
+		if(method.isWithIntepreter()){
+			result[0] = this;
+			result[1] = callFrame;
+			offset = 2;
+		}
 		for (int i = 0; i < method.arguments.size(); i++) {
 			Class<?> paramType = paramTypes[i];
 			ArgumentDecl argDecl = method.arguments.get(i);
 			VbValue argCall = args.get(argDecl).value;
 
 			if (paramType == VbValue.class) {
-				result[i] = argCall;
+				result[i + offset] = argCall;
 			} else {
-				result[i] = VbValue.vbValueToJava(arguments[i]);
+				result[i + offset] = VbValue.vbValueToJava(arguments[i]);
 			}
-		}
+		}		
 		return result;
 	}
 
