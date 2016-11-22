@@ -209,7 +209,6 @@ blockStmt :
 	| printStmt
 	| putStmt
 	| raiseEventStmt
-	| randomizeStmt
 	| redimStmt
 	| resetStmt
 	| resumeStmt
@@ -266,7 +265,6 @@ evalStmt :
 	| printStmt
 	| putStmt
 	| raiseEventStmt
-	| randomizeStmt
 	| redimStmt
 	| resetStmt
 	| rmdirStmt

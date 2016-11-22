@@ -100,4 +100,23 @@ public class JavaMethod extends MethodDecl {
 		}
 	}
 
+	public JavaMethod(Library library, JavaModuleDecl module, MethodDecl methodDecl, Method javaMethod) {
+		super(library, module, methodDecl.methodType);
+		this.javaMethod = javaMethod;
+		this.name = methodDecl.name;
+		this.visibility = Visibility.PUBLIC;
+		for(ArgumentDecl arg : methodDecl.arguments){
+			this.arguments.add(arg);
+		}
+	}
+
+	public JavaMethod(Library library, JavaClassModuleDecl module, MethodDecl methodDecl, Method javaMethod) {
+		super(library, module, methodDecl.methodType);
+		this.javaMethod = javaMethod;
+		this.name = methodDecl.name;
+		this.visibility = Visibility.PUBLIC;
+		for(ArgumentDecl arg : methodDecl.arguments){
+			this.arguments.add(arg);
+		}
+	}
 }

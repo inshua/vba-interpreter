@@ -98,6 +98,7 @@ import vba.VbaParser.MidStmtContext;
 import vba.VbaParser.OnErrorStmtContext;
 import vba.VbaParser.PrintStmtContext;
 import vba.VbaParser.RaiseEventStmtContext;
+import vba.VbaParser.RandomizeStmtContext;
 import vba.VbaParser.RedimStmtContext;
 import vba.VbaParser.RedimSubStmtContext;
 import vba.VbaParser.ResumeStmtContext;
@@ -189,7 +190,7 @@ public class BlockCompiler {
 	| printStmt						-	将格式化显示的数据写入顺序文件中。
 	| putStmt						-	将一个变量的数据写入磁盘文件中。
 	| raiseEventStmt				*
-	| randomizeStmt
+	| randomizeStmt					-	VB 里实际上用的是 Math.Randomize Sub
 	| redimStmt						*	
 	| resetStmt						-	关闭所有用 Open 语句打开的磁盘文件。
 	| resumeStmt					*

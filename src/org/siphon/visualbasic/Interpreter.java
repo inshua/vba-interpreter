@@ -95,7 +95,10 @@ public class Interpreter {
 		try {
 			return this.callMethod(runtimeModule, method, arguments);
 		} catch (ArgumentException e) {
-			Statement arg = argumentStatements.get(e.getArgumetIndex());
+			if(argumentStatements == null || e.getArgumetIndex() >= argumentStatements.size()){
+				throw new VbRuntimeException(VbRuntimeException.参数的个数错误或无效的属性设置);
+			}
+			Statement arg = argumentStatements.get(e.getArgumetIndex());			
 			if (e.getCause() instanceof OverflowException) {
 				throw new VbRuntimeException(VbRuntimeException.溢出, arg.getSourceLocation());
 			} else if (e.getCause() instanceof ClassCastException) {
@@ -157,7 +160,7 @@ public class Interpreter {
 
 	private Object[] toJavaArguments(Object[] arguments, JavaMethod method, Class<?>[] paramTypes) throws ArgumentException { // TODO 检查能否转换
 		Map<VarDecl, VbVariable> args = bindArguments(method, arguments);
-
+		
 		Object[] result = new Object[paramTypes.length];
 		for (int i = 0; i < method.arguments.size(); i++) {
 			Class<?> paramType = paramTypes[i];
@@ -326,7 +329,7 @@ public class Interpreter {
 					if (argDef.optional) {
 						value = argDef.defaultValue.clone();
 					} else {
-						// TODO not optional argument
+						throw new ArgumentException(i, new VbRuntimeException(VbRuntimeException.参数的个数错误或无效的属性设置));
 					}
 				} else {
 					if (arg instanceof VbValue) {

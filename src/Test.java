@@ -71,7 +71,9 @@ public class Test {
 		
 		//new Interpreter().executeVbProject("vba\\CreateObject\\Test.vbp");
 		
-		new Interpreter().executeVbProject("vba\\Interactive\\Test.vbp");
+		//new Interpreter().executeVbProject("vba\\Interactive\\Test.vbp");
+		
+		new Interpreter().executeVbProject("vba\\Random\\Test.vbp");
 	}
 
 }

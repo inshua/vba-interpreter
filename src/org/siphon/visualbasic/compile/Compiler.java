@@ -214,7 +214,7 @@ public class Compiler {
 	}
 
 	public Compiler() {
-		this.vba = new VBALibrary();
+		this.vba = new VBALibrary(this);
 		this.addLibraries(new Library[] { vba });
 	}
 
@@ -700,7 +700,7 @@ public class Compiler {
 	(block NEWLINE+)? 
 	END_SUB
 	 */
-	private MethodDecl compileMethodBaseInfo(SubStmtContext sub, ModuleDecl module) {
+	public MethodDecl compileMethodBaseInfo(SubStmtContext sub, ModuleDecl module) {
 		MethodDecl method = new MethodDecl(module.library, module, MethodType.Sub);
 		String name = sub.ambiguousIdentifier().getText();
 		compileMethodBaseInfo(name, parseVisibility(sub.visibility(), Visibility.PUBLIC), sub.STATIC() != null, sub.argList(),
@@ -709,7 +709,7 @@ public class Compiler {
 		return method;
 	}
 
-	private MethodDecl compileMethodBaseInfo(FunctionStmtContext func, ModuleDecl module) {
+	public MethodDecl compileMethodBaseInfo(FunctionStmtContext func, ModuleDecl module) {
 		MethodDecl method = new MethodDecl(module.library, module, MethodType.Function);
 
 		VbVarType vbVarType = VbVarType.VbVariant;
@@ -881,8 +881,6 @@ public class Compiler {
 				method.variables.put(u, arg);
 			}
 		}
-
-		this.addErrObjectDecl(method);
 	}
 
 	private void addErrObjectDecl(MethodDecl method) {
@@ -1593,6 +1591,7 @@ public class Compiler {
 	 * @param method
 	 */
 	private void compileMethodBody(MethodDecl method) {
+		this.addErrObjectDecl(method);
 		BlockContext block = null;
 
 		block = method.ast.getChild(BlockContext.class, 0);

@@ -514,7 +514,7 @@ public class VbValue {
 
 		} else {
 			if(autoCreateJavaModuleDecl){
-				JavaClassModuleDecl decl = new JavaClassModuleDecl(null, obj.getClass());
+				JavaClassModuleDecl decl = new JavaClassModuleDecl(null, null, obj.getClass());
 				ClassTypeDecl ct = new ClassTypeDecl(null, decl);
 				VbVarType vt = new VbVarType(VbVarType.vbObject, ct, null, obj.getClass());
 				JavaModuleInstance instance = new JavaModuleInstance(decl, obj);

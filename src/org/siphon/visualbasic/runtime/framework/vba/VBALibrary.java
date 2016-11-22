@@ -2,6 +2,7 @@ package org.siphon.visualbasic.runtime.framework.vba;
 
 import org.siphon.visualbasic.Library;
 import org.siphon.visualbasic.VarDecl;
+import org.siphon.visualbasic.compile.Compiler;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;
 import org.siphon.visualbasic.compile.JavaModuleDecl;
 import org.siphon.visualbasic.runtime.ErrObject;
@@ -14,20 +15,20 @@ public class VBALibrary extends Library {
 
 	private final VbVarType errorVarType;
 
-	public VBALibrary() {
+	public VBALibrary(Compiler compiler) {
 		super("VBA");
 		
-		this.addModule(new JavaModuleDecl(this, Math.class));
-		this.addModule(new JavaModuleDecl(this, DateTime.class));
-		this.addModule(new JavaModuleDecl(this, Strings.class));
-		this.addModule(new JavaModuleDecl(this, Interaction.class));
+		this.addModule(new JavaModuleDecl(this, compiler, Math.class));
+		this.addModule(new JavaModuleDecl(this, compiler, DateTime.class));
+		this.addModule(new JavaModuleDecl(this, compiler, Strings.class));
+		this.addModule(new JavaModuleDecl(this, compiler, Interaction.class));
 
-		JavaClassModuleDecl errClass = new JavaClassModuleDecl(this, ErrObject.class);
+		JavaClassModuleDecl errClass = new JavaClassModuleDecl(this, compiler, ErrObject.class);
 		this.addModule(errClass);
 		
 		this.errorVarType = new VbVarType(VbVarType.vbObject, this.types.get("ERROBJECT"), null, null);
 
-		this.addModule(new JavaClassModuleDecl(this, Collection.class));
+		this.addModule(new JavaClassModuleDecl(this, compiler, Collection.class));
 	}
 
 	public VbVarType getErrorVarType() {

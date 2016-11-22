@@ -11,4 +11,5 @@ public @interface VbMethod {
 	public boolean isDefault() default false;
 	public boolean isIterator() default false;
 	public boolean isDictionary() default false;
+	public String value() default "";
 }
