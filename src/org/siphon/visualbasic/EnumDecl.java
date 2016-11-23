@@ -1,8 +1,12 @@
 package org.siphon.visualbasic;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.siphon.visualbasic.compile.ImpossibleException;
+import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 
 public class EnumDecl extends VbTypeDecl {
@@ -31,5 +35,29 @@ public class EnumDecl extends VbTypeDecl {
 			if(c.name.equalsIgnoreCase(name)) return c;
 		}
 		return null;
+	}
+
+	public static EnumDecl fromJava(Library lib, Class clazz) {
+		EnumDecl enumDecl = new EnumDecl(lib);
+		// enumDecl.module = moduleDecl;
+		enumDecl.name = clazz.getSimpleName();
+		enumDecl.visibility = Visibility.PUBLIC;
+		for(Field fld : clazz.getFields()){
+			int m = fld.getModifiers();
+			if(Modifier.isStatic(m) && Modifier.isFinal(m) && Modifier.isPublic(m) && Number.class.isAssignableFrom(fld.getType())){
+				ConstDecl constDecl;
+				try {
+					constDecl = new ConstDecl(lib, null, new VbValue(VbVarType.VbLong, fld.getLong(null)));
+					constDecl.visibility = enumDecl.visibility;
+					//constDecl.ast = ;
+					constDecl.varType = VbVarType.VbLong;
+					constDecl.name = fld.getName();
+					enumDecl.constDecls.add(constDecl);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new ImpossibleException();
+				}
+			}
+		}
+		return enumDecl;
 	}
 }
