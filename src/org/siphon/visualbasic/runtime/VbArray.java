@@ -134,4 +134,11 @@ public class VbArray extends VbValue {
 			return s;
 		}
 	}
+	
+	public static VbArray create(VbVarType baseType, int lBound, int uBound){
+		ArrayDef paramArrayDef = new ArrayDef(baseType,
+				new ArrayDef.Rank[] { new ArrayDef.Rank(lBound, uBound) });
+		VbVarType arrType = new VbVarType(VbVarType.vbArray, null, paramArrayDef, null);
+		return new VbArray(arrType);
+	}
 }

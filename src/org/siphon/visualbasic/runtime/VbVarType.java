@@ -151,7 +151,20 @@ public class VbVarType {
 			return "Unknown " + vbType;
 		}
 	}
-
+	
+	public String getTypeName(){
+		if (vbType >= 0 && vbType < TypeNames.length) {
+			return TypeNames[vbType];
+		} else if (vbType == VbVarType.vbArray) {
+			return this.arrayDef.baseType.toString() + "()";
+		} else if (vbType == VbVarType.vbUserDefinedType 
+				|| vbType == VbVarType.vbObject) {
+			return this.typeDecl.toString();
+		} else {
+			throw new UnsupportedOperationException("unknown type");
+		}
+	}
+	
 	public final static VbVarType VbEmpty = new VbVarType(vbEmpty);
 	public final static VbVarType VbNull = new VbVarType(vbNull);
 	public final static VbVarType VbInteger = new VbVarType(VbVarType.vbInteger);

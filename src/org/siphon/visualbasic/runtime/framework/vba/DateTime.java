@@ -5,6 +5,7 @@ import java.util.Date;
 import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
+import org.siphon.visualbasic.runtime.framework.Enums.VbDayOfWeek;
 
 public class DateTime {
 	
@@ -37,10 +38,9 @@ public class DateTime {
 		return VbValue.Empty;
 	}
 	
-//	//Function DateDiff(Interval As String, Date1, Date2, [FirstDayOfWeek As VbDayOfWeek = vbSunday], [FirstWeekOfYear As VbFirstWeekOfYear = vbFirstJan1])
-//	@VbMethod
-//	public static VbValue DateDiff(String Interval, VbValue date1, VbValue date2, FirstDayOfWeek){
-//		
-//	}
+	@VbMethod("DateDiff(Interval As String, Date1, Date2, Optional FirstDayOfWeek As VbDayOfWeek = vbSunday], Optional FirstWeekOfYear As VbFirstWeekOfYear = vbFirstJan1)")
+	public static VbValue DateDiff(String Interval, VbValue date1, VbValue date2, int FirstDayOfWeek, int FirstWeekOfYear){
+		return VbValue.Empty;
+	}
     
 }

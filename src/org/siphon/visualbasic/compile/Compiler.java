@@ -1343,9 +1343,6 @@ public class Compiler {
 		if (asType != null) {
 			type = asType.type();
 		}
-		if(type != null && "ErrObject".equalsIgnoreCase(type.getText())){
-			System.out.println();
-		}
 		return parseType(type, typeHint, module);
 	}
 
@@ -1511,7 +1508,9 @@ public class Compiler {
 					return new VbValue(VbVarType.VbLong, o);
 				}
 			case VbaLexer.DATELITERAL:
-				throw new UnsupportedOperationException("todo");
+				String s = node.getText();
+				s = s.substring(1, s.length() - 2); 
+				return VbValue.fromJava(VbValue.parseDate(s));
 			case VbaLexer.NOTHING:
 				return VbValue.Nothing;
 			case VbaLexer.NULL:

@@ -259,7 +259,7 @@ public class VbValue {
 		}
 	}
 
-	private static Date parseDate(String s) {
+	public static Date parseDate(String s) {
 		FormatStyle[] styles = new FormatStyle[] { FormatStyle.SHORT, FormatStyle.MEDIUM, FormatStyle.LONG, FormatStyle.FULL };
 		for (int i = 0; i < styles.length; i++) {
 			try {
