@@ -3,6 +3,7 @@ package org.siphon.visualbasic.compile;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.siphon.visualbasic.ArgumentMode;
 import org.siphon.visualbasic.Library;
@@ -16,31 +17,37 @@ import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 import org.siphon.visualbasic.runtime.framework.VbParam;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
 public class JavaMethod extends MethodDecl {
 
 	public final Method javaMethod;
-	private boolean withIntepreter;
+	private boolean withInterpreter;
 
-	public JavaMethod setWithIntepreter(boolean withIntepreter) {
-		this.withIntepreter = withIntepreter;
-		return this;
+	public boolean isWithInterpreter() {
+		return withInterpreter;
 	}
 
-	public boolean isWithIntepreter() {
-		return withIntepreter;
-	}
-
-	public JavaMethod(Library library, ModuleDecl module, Method method) {
+	public JavaMethod(Library library, ModuleDecl module, Method method, boolean withInterpreter) {
 		super(library, module, method.getReturnType() == Void.class ? MethodType.Sub : MethodType.Function);
 
+		this.withInterpreter = withInterpreter;
 		this.javaMethod = method;
 		this.name = method.getName();
 		this.visibility = Visibility.PUBLIC;
 
-		if (method.getParameters().length > 0) {
+		Parameter[] params = method.getParameters();
+		if(withInterpreter) {
+			Parameter[] newParams = new Parameter[params.length - 2];
+			for(int i=2; i< params.length; i++) {
+				newParams[i-2] = params[i];
+			}
+			params = newParams;
+		}
+		if (params.length > 0) {
 			this.arguments = new ArrayList<>();
-
-			for (Parameter param : method.getParameters()) {
+			
+			for (Parameter param : params) {
 				VbParam[] vbParams = param.getAnnotationsByType(VbParam.class);
 				VbParam vbParam = null;
 				if(vbParams.length > 0) vbParam = vbParams[0];
@@ -94,8 +101,8 @@ public class JavaMethod extends MethodDecl {
 		this.returnType = VbVarType.javaTypeToVb(method.getReturnType());
 	}
 
-	public JavaMethod(Library lib, ModuleDecl module, Method method, boolean isProperty) {
-		this(lib, module, method);
+	public JavaMethod(Library lib, ModuleDecl module, Method method, boolean isProperty, boolean withInterpreter) {
+		this(lib, module, method, withInterpreter);
 		if(isProperty){
 			if(method.getName().startsWith("get")){
 				this.methodType = MethodType.PropertyGet;
@@ -110,24 +117,24 @@ public class JavaMethod extends MethodDecl {
 		}
 	}
 
-	public JavaMethod(Library library, JavaModuleDecl module, MethodDecl methodDecl, Method javaMethod, boolean withIntepreter) {
+	public JavaMethod(Library library, JavaModuleDecl module, MethodDecl methodDecl, Method javaMethod, boolean withInterpreter) {
 		super(library, module, methodDecl.methodType);
 		this.javaMethod = javaMethod;
 		this.name = methodDecl.name;
 		this.visibility = Visibility.PUBLIC;
-		this.withIntepreter = withIntepreter; 
+		this.withInterpreter = withInterpreter; 
 		this.returnType = methodDecl.returnType;
 		for(ArgumentDecl arg : methodDecl.arguments){
 			this.arguments.add(arg);
 		}
 	}
 
-	public JavaMethod(Library library, JavaClassModuleDecl module, MethodDecl methodDecl, Method javaMethod, boolean withIntepreter) {
+	public JavaMethod(Library library, JavaClassModuleDecl module, MethodDecl methodDecl, Method javaMethod, boolean withInterpreter) {
 		super(library, module, methodDecl.methodType);
 		this.javaMethod = javaMethod;
 		this.name = methodDecl.name;
 		this.visibility = Visibility.PUBLIC;
-		this.withIntepreter = withIntepreter;
+		this.withInterpreter = withInterpreter;
 		this.returnType = methodDecl.returnType;
 		for(ArgumentDecl arg : methodDecl.arguments){
 			this.arguments.add(arg);

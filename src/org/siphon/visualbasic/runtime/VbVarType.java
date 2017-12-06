@@ -465,4 +465,15 @@ public class VbVarType {
 		}
 	}
 
+	public String getProgId() {
+		String n = this.getTypeName();
+		if("OBJECT".equalsIgnoreCase(n)) {
+			ClassModuleDecl cmdcl = this.getClassModuleDecl();
+			return cmdcl.getLibrary().name + "." + cmdcl.name; 
+		} else {
+			return n;
+		}
+			
+	}
+
 }

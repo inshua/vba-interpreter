@@ -60,11 +60,11 @@ public class NameIndex {
 			// TODO
 			ClassTypeDecl c = (ClassTypeDecl) decl;
 			append(c, c.upperCaseName());
-			append(c, c.library.upperCaseName() + "." + c.upperCaseName());
+			append(c, c.getLibrary().upperCaseName() + "." + c.upperCaseName());
 			
 		} else if (decl instanceof ModuleDecl) {
 			append(decl, decl.upperCaseName());
-			append(decl, ((ModuleDecl) decl).library.upperCaseName() + "." + decl.upperCaseName());
+			append(decl, ((ModuleDecl) decl).getLibrary().upperCaseName() + "." + decl.upperCaseName());
 			for (VbDecl member : ((ModuleDecl) decl).members.values()) {
 				this.addDecl(member);
 			}
@@ -73,28 +73,28 @@ public class NameIndex {
 			MethodDecl m = (MethodDecl) decl;
 			append(m, m.upperCaseName());
 			append(m, m.module.upperCaseName() + "." + decl.upperCaseName());
-			append(m, m.library.upperCaseName() + "." + m.module.upperCaseName() + "." + decl.upperCaseName());
+			append(m, m.getLibrary().upperCaseName() + "." + m.module.upperCaseName() + "." + decl.upperCaseName());
 
 		} else if (decl instanceof VarDecl) { // 含 ConstDecl
 			VarDecl v = (VarDecl) decl;
 			append(v, v.upperCaseName());
 			if(v.module != null) append(v, v.module.upperCaseName() + "." + v.upperCaseName());
-			if(v.library != null && v.module != null) append(v, v.library.upperCaseName() + "." + v.module.upperCaseName() + "." + v.upperCaseName());
+			if(v.getLibrary() != null && v.module != null) append(v, v.getLibrary().upperCaseName() + "." + v.module.upperCaseName() + "." + v.upperCaseName());
 
 		} else if (decl instanceof EnumDecl) {
 			EnumDecl e = (EnumDecl) decl;
 			append(e, e.upperCaseName());
-			append(e, e.library.upperCaseName() + "." + e.upperCaseName());
+			append(e, e.getLibrary().upperCaseName() + "." + e.upperCaseName());
 
 			for (ConstDecl c : e.constDecls) {
 				append(c, c.upperCaseName());
 
 				append(c, e.upperCaseName() + "." + c.upperCaseName());
-				append(c, c.library.upperCaseName() + "." + e.upperCaseName() + "." + c.upperCaseName());
+				append(c, c.getLibrary().upperCaseName() + "." + e.upperCaseName() + "." + c.upperCaseName());
 			}
 		} else if(decl instanceof UdtDecl){
 			append(decl, decl.upperCaseName());
-			append(decl, decl.library.upperCaseName() + "." + decl.upperCaseName());
+			append(decl, decl.getLibrary().upperCaseName() + "." + decl.upperCaseName());
 		}
 	}
 	
@@ -122,9 +122,9 @@ public class NameIndex {
 		List<VbDecl> l = indexes.get(constName.toUpperCase());
 		if (l != null) {
 			for (VbDecl vbDecl : l) {
-				if (vbDecl.library == library || vbDecl.visibility == Visibility.PUBLIC) {
+				if (vbDecl.getLibrary() == library || vbDecl.visibility == Visibility.PUBLIC) {
 					if (vbDecl instanceof ConstDecl) {
-						if(vbDecl.library == library){	// 本工程优先
+						if(vbDecl.getLibrary() == library){	// 本工程优先
 							return (ConstDecl) vbDecl;
 						}
 						ConstDecl c = (ConstDecl) vbDecl;
@@ -147,10 +147,11 @@ public class NameIndex {
 		VbTypeDecl result = null;
 		List<VbDecl> l = indexes.get(complexName.toUpperCase());
 		if (l != null) {
+			boolean isNotTypeDecl = false;
 			for (VbDecl vbDecl : l) {
-				if (vbDecl.library == library || vbDecl.visibility == Visibility.PUBLIC) {
+				if (vbDecl.getLibrary() == library || vbDecl.visibility == Visibility.PUBLIC) {
 					if (vbDecl instanceof VbTypeDecl) {
-						if(vbDecl.library == library){	// 本工程优先
+						if(vbDecl.getLibrary() == library){	// 本工程优先
 							return (VbTypeDecl) vbDecl;
 						}
 						VbTypeDecl t = (VbTypeDecl) vbDecl;
@@ -160,9 +161,12 @@ public class NameIndex {
 							result = t;
 						}
 					} else {
-						throw new NotMatchException();
+						isNotTypeDecl = true;
 					}
 				}
+			}
+			if(isNotTypeDecl && result == null) {
+				throw new NotMatchException();
 			}
 		}
 		if(result == null) throw new NotFoundException();
@@ -183,7 +187,7 @@ public class NameIndex {
 		List<VbDecl> l = indexes.get(varName.toUpperCase());
 		if (l != null) {
 			for (VbDecl vbDecl : l) {
-				if (vbDecl.library == library || vbDecl.visibility == Visibility.PUBLIC) {
+				if (vbDecl.getLibrary() == library || vbDecl.visibility == Visibility.PUBLIC) {
 					if (declType.isInstance(vbDecl) && (!includeConst || vbDecl instanceof ConstDecl == false)) {
 						ModuleMemberDecl v = (ModuleMemberDecl) vbDecl;
 						if(v.module == module){
@@ -191,7 +195,7 @@ public class NameIndex {
 								sameModuleResult = ModuleMemberDecl.AMBIGUOUS;
 							}
 							sameModuleResult = v;
-						} else if(vbDecl.library == library){	// 本工程优先
+						} else if(vbDecl.getLibrary() == library){	// 本工程优先
 							if(sameLibResult != null){
 								sameLibResult  = ModuleMemberDecl.AMBIGUOUS;
 							} 
@@ -235,10 +239,10 @@ public class NameIndex {
 		List<VbDecl> l = indexes.get(complexName.toUpperCase());
 		if (l != null) {
 			for (VbDecl vbDecl : l) {
-				if (vbDecl.library == library || vbDecl.visibility == Visibility.PUBLIC) {
+				if (vbDecl.getLibrary() == library || vbDecl.visibility == Visibility.PUBLIC) {
 					if (vbDecl instanceof VbDecl) {
 						result.add(vbDecl);
-						if(vbDecl.library == library){	// 本工程优先
+						if(vbDecl.getLibrary() == library){	// 本工程优先
 							break;
 						}
 					}

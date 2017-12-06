@@ -20,6 +20,7 @@ import org.siphon.visualbasic.ArgumentException;
 import org.siphon.visualbasic.ClassModuleDecl;
 import org.siphon.visualbasic.ClassTypeDecl;
 import org.siphon.visualbasic.ConstDecl;
+import org.siphon.visualbasic.FormModuleDecl;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.MethodDecl;
 import org.siphon.visualbasic.ModuleDecl;
@@ -34,6 +35,7 @@ import org.siphon.visualbasic.compile.ImplementorClassModuleDecl;
 import org.siphon.visualbasic.compile.ImpossibleException;
 import org.siphon.visualbasic.runtime.ArgumentDecl;
 import org.siphon.visualbasic.runtime.CallFrame;
+import org.siphon.visualbasic.runtime.JavaModuleInstance;
 import org.siphon.visualbasic.runtime.ModuleInstance;
 import org.siphon.visualbasic.runtime.Statement;
 import org.siphon.visualbasic.runtime.UdtInstance;
@@ -42,6 +44,7 @@ import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVariable;
+import org.siphon.visualbasic.runtime.framework.vb.Form;
 /**
  * 生成 EvalAssignable 对象，支持 apply 和 assign 操作，对应用于求值和赋值
  * 
@@ -780,6 +783,13 @@ public class EvalAssignableStatement extends Statement {
 			} else if (b.varType.vbType == VbVarType.vbObject) {
 				if (b.value instanceof ModuleInstance) {
 					ModuleInstance instance = b.ensureInstanceInited(interpreter, frame, this.currSourceLocation);
+					if(instance.getModuleDecl() instanceof FormModuleDecl) {
+						try {
+							interpreter.ensureFormLoaded(instance);
+						} catch (ArgumentException e) {
+							throw new VbRuntimeException(VbRuntimeException.无效的过程调用, next.sourceLocation, e);
+						}
+					}
 
 					boolean stay = false;
 					Object member = next.member;

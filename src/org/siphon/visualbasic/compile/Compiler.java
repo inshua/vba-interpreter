@@ -26,8 +26,10 @@ import org.siphon.visualbasic.ArgumentMode;
 import org.siphon.visualbasic.ClassTypeDecl;
 import org.siphon.visualbasic.ClassModuleDecl;
 import org.siphon.visualbasic.ConstDecl;
+import org.siphon.visualbasic.ControlDef;
 import org.siphon.visualbasic.EnumDecl;
 import org.siphon.visualbasic.EventDecl;
+import org.siphon.visualbasic.FormModuleDecl;
 import org.siphon.visualbasic.Library;
 import org.siphon.visualbasic.MethodDecl;
 import org.siphon.visualbasic.MethodType;
@@ -57,6 +59,7 @@ import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVariable;
 import org.siphon.visualbasic.runtime.framework.Debug;
+import org.siphon.visualbasic.runtime.framework.vb.VBLibrary;
 import org.siphon.visualbasic.runtime.framework.vba.VBALibrary;
 import org.siphon.visualbasic.runtime.statements.CalcStatements;
 import org.siphon.visualbasic.runtime.statements.CompareStatements;
@@ -92,6 +95,7 @@ import vba.VbaParser.ConstSubStmtContext;
 import vba.VbaParser.ConstSubscriptContext;
 import vba.VbaParser.ConstSubscriptsContext;
 import vba.VbaParser.ConstValueExprContext;
+import vba.VbaParser.ControlDeclarationContext;
 import vba.VbaParser.CveAddContext;
 import vba.VbaParser.CveAmpContext;
 import vba.VbaParser.CveAndContext;
@@ -185,6 +189,15 @@ public class Compiler {
 	SourceLocation withObjDeclLocation;
 
 	private final VBALibrary vba;
+	public VBALibrary getVbaLib() {
+		return this.vba;
+	}
+
+	private final VBLibrary vb;
+	
+	public VBLibrary getVbLib() {
+		return this.vb;
+	}
 
 	private final static Map<String, VbVarType> vbTypeCharToVbType = new HashMap<>();
 
@@ -215,7 +228,8 @@ public class Compiler {
 
 	public Compiler() {
 		this.vba = new VBALibrary(this);
-		this.addLibraries(new Library[] { vba });
+		this.vb = new VBLibrary(this);
+		this.addLibraries(new Library[] { vba, vb });
 	}
 
 	/**
@@ -339,6 +353,20 @@ public class Compiler {
 			}
 		}
 
+		// form to same name variable
+		for (ModuleDecl moduleDecl : result.modules.values()) {
+			if(moduleDecl instanceof FormModuleDecl) {
+				FormModuleDecl fmdcl = (FormModuleDecl) moduleDecl;
+				VarDecl varDecl = new VarDecl(result, null);
+				varDecl.varType = new VbVarType(VbVarType.vbObject, 
+						result.types.get(fmdcl.upperCaseName()), null, null);
+				varDecl.name = fmdcl.name;
+				varDecl.visibility = Visibility.PUBLIC;				
+				this.addDecl(moduleDecl, null, varDecl);
+				fmdcl.setVarDecl(varDecl);
+			}
+		}
+		
 		// procedure body
 		for (ModuleDecl moduleDecl : result.modules.values()) {
 			for (VbDecl member : moduleDecl.members.values()) {
@@ -412,9 +440,27 @@ public class Compiler {
 			/*
 			 * moduleHeader : VERSION WS DOUBLELITERAL WS CLASS; 
 			 */
-			moduleDecl = new ClassModuleDecl(lib);
+			moduleDecl = new ClassModuleDecl(lib, this);
 			String s = moduleAst.moduleHeader().DOUBLELITERAL().getText();
 			moduleDecl.version = Double.parseDouble(s);
+		}
+		
+		if(moduleAst.controlDeclaration() != null) {
+			moduleDecl = new ModuleDecl(lib);
+			ControlDeclarationContext controlDeclAst = moduleAst.controlDeclaration();
+			ControlDef controlDef;
+			try {
+				controlDef = this.parseControlDecl(controlDeclAst, moduleDecl);
+				if("VB.FORM".equalsIgnoreCase(controlDef.getType().getProgId())) {
+					FormModuleDecl formModuleDecl = new FormModuleDecl(lib, this, controlDef);
+					moduleDecl = formModuleDecl;
+					moduleDecl.name = controlDef.getName();
+				} else {
+					moduleDecl.addCompileException(controlDeclAst, "unknown control " + controlDef.getType()); 
+				}
+			} catch (CompileException e) {
+				moduleDecl.addCompileException(e);
+			}
 		}
 
 		if (moduleAst.moduleAttributes() != null) {
@@ -471,12 +517,37 @@ public class Compiler {
 				} else if (declStmt instanceof TypeStmtContext) {
 					compileUdtDecl((TypeStmtContext) declStmt, moduleDecl);
 				} else if (declStmt instanceof EventStmtContext) {
-					compileEventDecl((EventStmtContext) declStmt, moduleDecl);
+					EventDecl eventDecl = compileEventDecl((EventStmtContext) declStmt, moduleDecl);
+					if(eventDecl != null) {
+						ClassModuleDecl classModuleDecl = (ClassModuleDecl) moduleDecl;
+						classModuleDecl.addEvent((EventStmtContext) declStmt, eventDecl); // 事件并不是对象成员，事件可以和其它成员重名
+					}
 				}
 			}
 		}
 
 		return moduleDecl;
+	}
+
+	private ControlDef parseControlDecl(ControlDeclarationContext controlDeclAst, ModuleDecl moduleDecl) throws CompileException {
+		ControlDef result = new ControlDef();
+		result.setType(this.parseType(controlDeclAst.type(), null, moduleDecl));
+		result.setName(controlDeclAst.ambiguousIdentifier().getText());
+			
+		for (ModuleConfigElementContext config : controlDeclAst.moduleConfigElement()) {
+			String id = config.ambiguousIdentifier().getText();
+			VbValue val;
+			try {
+				val = parseLiteral(config.literal(), moduleDecl);
+				result.getAttributes().put(id, val);
+			} catch (CompileException e) {
+				moduleDecl.addCompileException(e);
+			}
+		}
+		for(ControlDeclarationContext child : controlDeclAst.controlDeclaration()) {
+			result.getChildren().add(parseControlDecl(child, moduleDecl));
+		}
+		return result;
 	}
 
 	/**
@@ -568,11 +639,11 @@ public class Compiler {
 			
 			typeStmt_Element : ambiguousIdentifier (WS? LPAREN (WS? subscripts)? WS? RPAREN)? (WS asTypeClause)? endOfStatement;
 		 */
-		UdtDecl result = new UdtDecl(module.library);
+		UdtDecl result = new UdtDecl(module.getLibrary());
 		result.visibility = parseVisibility(decl.visibility(), Visibility.PRIVATE);
 		result.name = decl.ambiguousIdentifier().getText();
 		for (TypeStmt_ElementContext te : decl.typeStmt_Element()) {
-			VarDecl var = new VarDecl(module.library, module);
+			VarDecl var = new VarDecl(module.getLibrary(), module);
 			var.name = te.ambiguousIdentifier().getText();
 			ArrayDef.Rank[] ranks = null;
 			try {
@@ -598,7 +669,7 @@ public class Compiler {
 
 			result.addMember(var);
 		}
-		addType(module.library, result);
+		addType(module.getLibrary(), result);
 	}
 
 	private String fileNameToModuleName(String baseName) {
@@ -655,16 +726,17 @@ public class Compiler {
 		return result;
 	}
 
-	private void compileEventDecl(EventStmtContext eventStmt, ModuleDecl module) {
+	public EventDecl compileEventDecl(EventStmtContext eventStmt, ModuleDecl module) {
 		/*
 		 * 	eventStmt : (visibility WS)? EVENT WS ambiguousIdentifier WS? argList;
 		 */
 		if (module instanceof ClassModuleDecl == false) {
 			module.addCompileException(eventStmt, CompileException.MUST_IN_CLASSMODULE, eventStmt);
-			return;
+			// TODO raise error and module add CompileException to it's list self
+			return null;
 		}
 
-		EventDecl eventDecl = new EventDecl(module.library, module);
+		EventDecl eventDecl = new EventDecl(module.getLibrary(), module);
 		eventDecl.name = eventStmt.ambiguousIdentifier().getText();
 		eventDecl.visibility = parseVisibility(eventStmt.visibility(), Visibility.PUBLIC);
 
@@ -690,8 +762,7 @@ public class Compiler {
 		// 可以象声明过程的参数一样来声明事件的参数，但有以下不同：事件不能有带命名参数、Optional 参数、或者 ParamArray 参数。事件没有返回值。
 		eventDecl.arguments = args;
 
-		ClassModuleDecl classModuleDecl = (ClassModuleDecl) module;
-		classModuleDecl.addEvent(eventStmt, eventDecl); // 事件并不是对象成员，事件可以和其它成员重名
+		return eventDecl;
 	}
 
 	/*
@@ -701,7 +772,7 @@ public class Compiler {
 	END_SUB
 	 */
 	public MethodDecl compileMethodBaseInfo(SubStmtContext sub, ModuleDecl module) {
-		MethodDecl method = new MethodDecl(module.library, module, MethodType.Sub);
+		MethodDecl method = new MethodDecl(module.getLibrary(), module, MethodType.Sub);
 		String name = sub.ambiguousIdentifier().getText();
 		compileMethodBaseInfo(name, parseVisibility(sub.visibility(), Visibility.PUBLIC), sub.STATIC() != null, sub.argList(),
 				module, method);
@@ -710,7 +781,7 @@ public class Compiler {
 	}
 
 	public MethodDecl compileMethodBaseInfo(FunctionStmtContext func, ModuleDecl module) {
-		MethodDecl method = new MethodDecl(module.library, module, MethodType.Function);
+		MethodDecl method = new MethodDecl(module.getLibrary(), module, MethodType.Function);
 
 		VbVarType vbVarType = VbVarType.VbVariant;
 		try {
@@ -725,7 +796,7 @@ public class Compiler {
 		method.returnType = vbVarType;
 
 		String name = func.ambiguousIdentifier().getText();
-		VarDecl resultDecl = new VarDecl(module.library, module);
+		VarDecl resultDecl = new VarDecl(module.getLibrary(), module);
 		resultDecl.name = name;
 		resultDecl.varType = method.returnType;
 		resultDecl.methodDecl = method;
@@ -755,7 +826,7 @@ public class Compiler {
 				return;
 			}
 		} else {
-			rule = new RuleDecl(module.library, module);
+			rule = new RuleDecl(module.getLibrary(), module);
 
 			VbVarType varType = VbVarType.VbVariant;
 			try {
@@ -769,7 +840,7 @@ public class Compiler {
 			}
 			rule.returnType = varType;
 
-			VarDecl resultDecl = new VarDecl(module.library, module);
+			VarDecl resultDecl = new VarDecl(module.getLibrary(), module);
 			resultDecl.name = name;
 			resultDecl.varType = rule.returnType;
 			resultDecl.methodDecl = rule;
@@ -782,7 +853,7 @@ public class Compiler {
 			names.addDecl(rule);
 		}
 
-		MethodDecl func = new MethodDecl(module.library, module, MethodType.Function);
+		MethodDecl func = new MethodDecl(module.getLibrary(), module, MethodType.Function);
 		func.ast = ruleStmt;
 		func.name = rule.name;
 		func.arguments = rule.arguments;
@@ -813,8 +884,8 @@ public class Compiler {
 		}
 	}
 
-	private MethodDecl compilePropertyGetBaseInfo(PropertyGetStmtContext propGet, ModuleDecl module) {
-		MethodDecl method = new MethodDecl(module.library, module, MethodType.PropertyGet);
+	public MethodDecl compilePropertyGetBaseInfo(PropertyGetStmtContext propGet, ModuleDecl module) {
+		MethodDecl method = new MethodDecl(module.getLibrary(), module, MethodType.PropertyGet);
 
 		VbVarType vbVarType = VbVarType.VbVariant;
 		try {
@@ -829,7 +900,7 @@ public class Compiler {
 		method.returnType = vbVarType;
 
 		String name = propGet.ambiguousIdentifier().getText();
-		VarDecl resultDecl = new VarDecl(module.library, module);
+		VarDecl resultDecl = new VarDecl(module.getLibrary(), module);
 		resultDecl.name = name;
 		resultDecl.varType = method.returnType;
 		resultDecl.methodDecl = method;
@@ -845,8 +916,8 @@ public class Compiler {
 		return method;
 	}
 
-	private MethodDecl compilePropertyLetBaseInfo(PropertyLetStmtContext sub, ModuleDecl module) {
-		MethodDecl method = new MethodDecl(module.library, module, MethodType.PropertyLet);
+	public MethodDecl compilePropertyLetBaseInfo(PropertyLetStmtContext sub, ModuleDecl module) {
+		MethodDecl method = new MethodDecl(module.getLibrary(), module, MethodType.PropertyLet);
 		String name = sub.ambiguousIdentifier().getText();
 		compileMethodBaseInfo(name, parseVisibility(sub.visibility(), Visibility.PUBLIC), sub.STATIC() != null, sub.argList(),
 				module, method);
@@ -854,8 +925,8 @@ public class Compiler {
 		return method;
 	}
 
-	private MethodDecl compilePropertySetBaseInfo(PropertySetStmtContext sub, ModuleDecl module) {
-		MethodDecl method = new MethodDecl(module.library, module, MethodType.PropertySet);
+	public MethodDecl compilePropertySetBaseInfo(PropertySetStmtContext sub, ModuleDecl module) {
+		MethodDecl method = new MethodDecl(module.getLibrary(), module, MethodType.PropertySet);
 		String name = sub.ambiguousIdentifier().getText();
 		compileMethodBaseInfo(name, parseVisibility(sub.visibility(), Visibility.PUBLIC), sub.STATIC() != null, sub.argList(),
 				module, method);
@@ -1017,7 +1088,7 @@ public class Compiler {
 
 				ConstDecl decl;
 				try {
-					decl = new ConstDecl(methodDecl == null ? moduleDecl.library : null, moduleDecl,
+					decl = new ConstDecl(methodDecl == null ? moduleDecl.getLibrary() : null, moduleDecl,
 							VbValue.cast(val, vbVarType.vbType));
 					decl.visibility = visibility;
 					decl.name = stmt.ambiguousIdentifier().getText();
@@ -1047,14 +1118,14 @@ public class Compiler {
 			enumerationStmt_Constant : ambiguousIdentifier (WS? EQ WS? constValueExpr)? endOfStatement;
 		
 		 */
-		EnumDecl enumDecl = new EnumDecl(moduleDecl.library);
+		EnumDecl enumDecl = new EnumDecl(moduleDecl.getLibrary());
 		// enumDecl.module = moduleDecl;
 		enumDecl.name = enumerationStmt.ambiguousIdentifier().getText();
 		enumDecl.visibility = parseVisibility(enumerationStmt.visibility(), Visibility.PUBLIC);
 
 		for (EnumerationStmt_ConstantContext enumConstCtxt : enumerationStmt.enumerationStmt_Constant()) {
 			try {
-				ConstDecl constDecl = new ConstDecl(moduleDecl.library, moduleDecl,
+				ConstDecl constDecl = new ConstDecl(moduleDecl.getLibrary(), moduleDecl,
 						parseConstValueExpr(enumConstCtxt.constValueExpr(), moduleDecl, null));
 
 				String name = enumConstCtxt.ambiguousIdentifier().getText();
@@ -1076,7 +1147,7 @@ public class Compiler {
 			}
 		}
 
-		addType(moduleDecl.library, enumDecl);
+		addType(moduleDecl.getLibrary(), enumDecl);
 
 	}
 
@@ -1110,7 +1181,7 @@ public class Compiler {
 
 		List<VarDecl> result = new ArrayList<VarDecl>();
 		for (VariableSubStmtContext stmt : variableStmt.variableListStmt().variableSubStmt()) {
-			VarDecl decl = new VarDecl(method == null ? module.library : null, module);
+			VarDecl decl = new VarDecl(method == null ? module.getLibrary() : null, module);
 			decl.visibility = visibility;
 			decl.isStatic = isStatic;
 			decl.withEvents = withEvents;
@@ -1323,11 +1394,11 @@ public class Compiler {
 					}
 					return ((ConstDecl) v).constValue;
 				} else {
-					return names.findAccessibleConst(constName, module.library).constValue;
+					return names.findAccessibleConst(constName, module.getLibrary()).constValue;
 				}
 			} else {
 				String constName = valueStmt.getText().toUpperCase();
-				return names.findAccessibleConst(constName, module.library).constValue;
+				return names.findAccessibleConst(constName, module.getLibrary()).constValue;
 			}
 		} catch (NotMatchException e) {
 			throw module.newCompileException(valueStmt, CompileException.SHOULD_BE, valueStmt, "const");
@@ -1370,7 +1441,7 @@ public class Compiler {
 						VbValue l = parseLiteral(fs.literal(), module);
 						length = (Long) VbValue.cast(l, VbVarType.vbLong).value;
 					} else {
-						VbValue l = names.findAccessibleConst(fs.ambiguousIdentifier().getText(), module.library).constValue;
+						VbValue l = names.findAccessibleConst(fs.ambiguousIdentifier().getText(), module.getLibrary()).constValue;
 						length = (Long) VbValue.cast(l, VbVarType.vbLong).value;
 					}
 				} catch (ClassCastException e) {
@@ -1413,7 +1484,7 @@ public class Compiler {
 
 	private VbVarType findTypeInGlobal(ComplexTypeContext types, ModuleDecl module) throws CompileException {
 		try {
-			VbTypeDecl type = names.findAccessibleType(types.getText(), module.library);
+			VbTypeDecl type = names.findAccessibleType(types.getText(), module.getLibrary());
 			if (type instanceof EnumDecl) {
 				return new VbVarType(VbVarType.vbLong, (VbTypeDecl) type, null, null);
 			} else if (type instanceof UdtDecl) {
@@ -1435,7 +1506,7 @@ public class Compiler {
 	
 	private VbVarType findType(ComplexTypeContext types, ModuleDecl module) throws CompileException {
 		try {
-			VbTypeDecl type = module.library.names.findAccessibleType(types.getText(), module.library);
+			VbTypeDecl type = module.getLibrary().names.findAccessibleType(types.getText(), module.getLibrary());
 			if (type instanceof EnumDecl) {
 				return new VbVarType(VbVarType.vbLong, (VbTypeDecl) type, null, null);
 			} else if (type instanceof UdtDecl) {
@@ -1614,6 +1685,8 @@ public class Compiler {
 	 * @param method
 	 */
 	private void compileMethodBody(MethodDecl method) {
+		if(method.ast == null) return;
+		
 		this.addErrObjectDecl(method);
 		BlockContext block = null;
 
@@ -1673,7 +1746,7 @@ public class Compiler {
 		}
 		VbTypeDecl typeDecl = null;
 		try {
-			typeDecl = names.findAccessibleType(name, module.library);
+			typeDecl = names.findAccessibleType(name, module.getLibrary());
 		} catch (NotMatchException e) {
 			throw module.newCompileException(ast, CompileException.SHOULD_BE, name, "type");
 		} catch (AmbiguousIdentifierException e) {
@@ -1942,7 +2015,7 @@ public class Compiler {
 		if (method.module.members.containsKey(varName)) {
 			return method.module.members.get(varName);
 		} else {
-			return names.findAccessibleMemberDecl(varName, method.module, method.module.library, false, ModuleMemberDecl.class);
+			return names.findAccessibleMemberDecl(varName, method.module, method.module.getLibrary(), false, ModuleMemberDecl.class);
 		}
 	}
 
@@ -1977,7 +2050,7 @@ public class Compiler {
 		} catch (NotFoundException e) {
 			if (method.module.isExplicit() == false) {
 				// auto declare var as Variant
-				VarDecl varDecl = new VarDecl(method.library, method.module);
+				VarDecl varDecl = new VarDecl(method.getLibrary(), method.module);
 				varDecl.name = ast.getText();
 				varDecl.ast = ast;
 				varDecl.methodDecl = method;

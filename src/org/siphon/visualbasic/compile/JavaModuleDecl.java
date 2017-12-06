@@ -45,7 +45,7 @@ public class JavaModuleDecl extends ModuleDecl {
 				}
 				if (vbMethod != null) {
 					if (StringUtils.isEmpty(vbMethod.value())) {
-						this.addMember(new JavaMethod(lib, this, method).setWithIntepreter(vbMethod.withIntepreter()));
+						this.addMember(new JavaMethod(lib, this, method, vbMethod.withIntepreter()));
 					} else {
 						String decl = vbMethod.value();
 						String methodType = decl.substring(0, decl.indexOf(' '));

@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringUtils;
 import org.siphon.visualbasic.ClassModuleDecl;
 import org.siphon.visualbasic.ConstDecl;
+import org.siphon.visualbasic.EventDecl;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.Library;
 import org.siphon.visualbasic.MethodDecl;
@@ -22,25 +23,35 @@ import org.siphon.visualbasic.Visibility;
 import org.siphon.visualbasic.runtime.CallFrame;
 import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.VbValue;
+import org.siphon.visualbasic.runtime.framework.VbEvent;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
+import org.siphon.visualbasic.runtime.framework.vb.Form;
 
 import vba.VbaLexer;
 import vba.VbaParser;
+import vba.VbaParser.EventStmtContext;
 import vba.VbaParser.FunctionStmtContext;
+import vba.VbaParser.PropertyGetStmtContext;
+import vba.VbaParser.PropertyLetStmtContext;
+import vba.VbaParser.PropertySetStmtContext;
 import vba.VbaParser.SubStmtContext;
 
 /**
  * Java 模块。只取导出的成员。
  * 类模块应使用 JavaClassModule
  */
-public class JavaClassModuleDecl extends ClassModuleDecl{
+public class JavaClassModuleDecl extends ClassModuleDecl {
 
 	public static final ClassModuleDecl JAVA_OBJECT = new JavaClassModuleDecl();
-	
+
 	private Class javaClass;
+	
+	public Class getJavaClass() {
+		return this.javaClass;
+	}
 
 	public JavaClassModuleDecl(Library lib, Compiler compiler, Class javaClass) {
-		super(lib);
+		super(lib, compiler);
 		
 		this.name = javaClass.getSimpleName();
 		
@@ -63,12 +74,11 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 					if(StringUtils.isEmpty(vbMethod.value())){
 						String name = method.getName();
 						if((name.startsWith("get") || name.startsWith("set")) && name.length() > 3 && Character.isLowerCase(name.charAt(3)) == false){
-							JavaMethod m = new JavaMethod(lib, this, method, true);
-							m.setWithIntepreter(vbMethod.withIntepreter());
+							JavaMethod m = new JavaMethod(lib, this, method, true, vbMethod.withIntepreter());
 							this.addMember(m);
 							name = m.name;
 						} else{
-							this.addMember(new JavaMethod(lib, this, method).setWithIntepreter(vbMethod.withIntepreter()));
+							this.addMember(new JavaMethod(lib, this, method, vbMethod.withIntepreter()));
 						}
 						if(vbMethod.isDefault()){
 							this.setDefaultMember(name);
@@ -95,6 +105,18 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 							MethodDecl methodDecl = compiler.compileMethodBaseInfo((SubStmtContext) element, this);
 							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
 							this.addMember(m);
+						} else if (element instanceof PropertyGetStmtContext) {
+							MethodDecl methodDecl = compiler.compilePropertyGetBaseInfo((PropertyGetStmtContext) element, this);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+							this.addMember(m);
+						} else if (element instanceof PropertyLetStmtContext) {
+							MethodDecl methodDecl = compiler.compilePropertyLetBaseInfo((PropertyLetStmtContext) element, this);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+							this.addMember(m);
+						} else if (element instanceof PropertySetStmtContext) {
+							MethodDecl methodDecl = compiler.compilePropertySetBaseInfo((PropertySetStmtContext) element, this);
+							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+							this.addMember(m);
 						} else {
 							throw new UnsupportedOperationException("cannot be " + element);
 						}
@@ -114,6 +136,31 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 				} catch (IllegalArgumentException e) {
 				} catch (IllegalAccessException e) {
 				}
+			} else {
+				VbEvent[] vbEvents = fld.getAnnotationsByType(VbEvent.class);
+				if(vbEvents.length > 0){
+					VbEvent vbEvent = vbEvents[0]; 
+					String decl = vbEvent.value();
+					
+					VbaLexer lexer = new VbaLexer(new org.antlr.v4.runtime.ANTLRInputStream(decl));
+					CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+					VbaParser parser = new VbaParser(tokenStream);					
+					ParseTree element = parser.eventStmt();
+					if(element instanceof EventStmtContext){
+						EventDecl eventDecl = compiler.compileEventDecl((EventStmtContext) element, this);
+						if(eventDecl != null) {
+							JavaEventDecl javaEventDecl = new JavaEventDecl(lib, this, fld);
+							javaEventDecl.arguments = eventDecl.arguments;
+							javaEventDecl.name = eventDecl.name;
+							javaEventDecl.visibility = eventDecl.visibility;
+							javaEventDecl.setWithIntepreter(true);
+							
+							this.addEvent((EventStmtContext) element, javaEventDecl);
+						}
+					} else {
+						throw new UnsupportedOperationException("cannot be " + element);
+					}
+				}
 			}
 		}
 	}
@@ -122,7 +169,8 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 		super();
 	}
 
-	public Object newInstance(Interpreter interpreter, CallFrame frame, SourceLocation sourceLocation) throws VbRuntimeException {
+	public Object newInstance(Interpreter interpreter, CallFrame frame, SourceLocation sourceLocation)
+			throws VbRuntimeException {
 		try {
 			return this.javaClass.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -130,5 +178,4 @@ public class JavaClassModuleDecl extends ClassModuleDecl{
 		}
 	}
 
-	
 }

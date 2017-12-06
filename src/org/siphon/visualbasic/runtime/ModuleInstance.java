@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 
 import org.siphon.visualbasic.ClassTypeDecl;
 import org.siphon.visualbasic.EventDecl;
+import org.siphon.visualbasic.FormModuleDecl;
 import org.siphon.visualbasic.Interpreter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.siphon.visualbasic.ArgumentException;
@@ -18,6 +19,10 @@ import org.siphon.visualbasic.TheClass;
 import org.siphon.visualbasic.VarDecl;
 import org.siphon.visualbasic.VbDecl;
 import org.siphon.visualbasic.compile.ImpossibleException;
+import org.siphon.visualbasic.compile.JavaClassModuleDecl;
+import org.siphon.visualbasic.runtime.framework.vb.Form;
+
+import com.sun.org.apache.bcel.internal.classfile.JavaClass;
 
 public class ModuleInstance {
 
@@ -42,7 +47,7 @@ public class ModuleInstance {
 
 	public ModuleInstance(ModuleDecl module) {
 		this.moduleDecl = module;
-
+		
 		for (String name : module.members.keySet()) {
 			VbDecl member = module.members.get(name);
 			if (member instanceof VarDecl) {
@@ -61,7 +66,7 @@ public class ModuleInstance {
 
 		if (module instanceof ClassModuleDecl) {
 			ClassModuleDecl classModule = (ClassModuleDecl) module;
-			VbVarType t = new VbVarType(VbVarType.vbObject, new ClassTypeDecl(module.library, classModule), null, null);
+			VbVarType t = new VbVarType(VbVarType.vbObject, new ClassTypeDecl(module.getLibrary(), classModule), null, null);
 			this._asVbValue = new VbValue(t, this);
 
 		} else {
@@ -103,18 +108,24 @@ public class ModuleInstance {
 		VbVariable baseObjVar = this.variables.get(classModule.getBaseObject());
 		if (baseObjVar == null)
 			return;
-		try {
-			baseObjVar.value.ensureInstanceInited(interpreter, frame, null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		
+		baseObjVar.value.ensureInstanceInited(interpreter, frame, null);
 		ModuleInstance instance = (ModuleInstance) baseObjVar.value.value;
 
 		instance.bindEventHandlers(baseObjVar.varDecl, this, interpreter, frame);
 
 		ClassTypeDecl decl = (ClassTypeDecl) baseObjVar.varType.typeDecl;
-		TheClass theClass = (TheClass) decl.classModule;
-		instance.raiseEvent(theClass.initializeEvent, null, null, interpreter, frame);
+		if(decl.classModule instanceof TheClass) {
+			TheClass theClass = (TheClass) decl.classModule;
+			instance.raiseEvent(theClass.initializeEvent, null, null, interpreter, frame);
+		} else if(this.moduleDecl instanceof FormModuleDecl){
+			// Form 并不在初始化时 Load
+//			try {
+//				form.load(interpreter, frame);
+//			} catch (ArgumentException e) {
+//				throw new VbRuntimeException(VbRuntimeException.不能加载或卸载该对象, e);
+//			}
+		}
 	}
 
 	public void addEventListener(ModuleInstance subscriber, EventDecl eventDecl, MethodDecl listener) {
@@ -172,4 +183,8 @@ public class ModuleInstance {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return String.format("(Instance %s)", this.moduleDecl.name);
+	}
 }

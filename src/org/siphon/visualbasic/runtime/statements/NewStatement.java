@@ -13,29 +13,29 @@ import org.siphon.visualbasic.runtime.VbValue;
 
 public class NewStatement extends Statement {
 
-	private ClassTypeDecl classDecl;
+	private ClassTypeDecl classTypeDecl;
 
-	public NewStatement(SourceLocation sourceLocation, ClassTypeDecl classDecl) {
+	public NewStatement(SourceLocation sourceLocation, ClassTypeDecl classTypeDecl) {
 		super(sourceLocation);
-		this.classDecl = classDecl;
+		this.classTypeDecl = classTypeDecl;
 	}
 
 	@Override
 	public VbValue eval(Interpreter interpreter, CallFrame frame) throws VbRuntimeException {
 		ModuleInstance instance = null;
-		if(classDecl.classModule instanceof JavaClassModuleDecl){
-			JavaClassModuleDecl jcmd = (JavaClassModuleDecl) classDecl.classModule;
+		if(classTypeDecl.classModule instanceof JavaClassModuleDecl){
+			JavaClassModuleDecl jcmd = (JavaClassModuleDecl) classTypeDecl.classModule;
 			instance = new JavaModuleInstance(jcmd, jcmd.newInstance(interpreter, frame, sourceLocation));
 		} else {
-			instance = new ModuleInstance(classDecl.classModule);
+			instance = new ModuleInstance(classTypeDecl.classModule);
 			instance.initializeClass(interpreter, frame);
-		}
+		} 
 		return instance.asVbValue();
 	}
 	
 	@Override
 	public String toString() {
-		return "New " + classDecl;
+		return "New " + classTypeDecl;
 	}
 
 }

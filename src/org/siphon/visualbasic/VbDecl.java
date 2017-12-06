@@ -3,8 +3,11 @@ package org.siphon.visualbasic;
 public class VbDecl {
 	public String name;
 	public Visibility visibility = Visibility.PRIVATE;
-	public final Library library;
+	protected final Library library;
 	
+	public Library getLibrary() {
+		return this.library;
+	}
 	
 	public VbDecl(Library library){
 		this.library = library;

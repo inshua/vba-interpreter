@@ -18,9 +18,9 @@ import vba.VbaParser.ImplementsStmtContext;
 
 public class ClassModuleDecl extends ModuleDecl {
 
-	private MeDecl _me;
+	protected MeDecl _me;
 	public Map<String, EventDecl> events = new HashMap<>();
-	private VarDecl baseObject;
+	protected VarDecl baseObject;
 
 	private ModuleMemberDecl defaultMember;
 	private ModuleMemberDecl iteratorMember;
@@ -28,13 +28,15 @@ public class ClassModuleDecl extends ModuleDecl {
 	public List<ClassTypeDecl> implementClasses = new ArrayList<>();
 	
 	private Map<ClassModuleDecl, ClassTypeDecl> implementors = new HashMap<>();
+	protected Compiler compiler;
 	
 	public VarDecl getBaseObject() {
 		return baseObject;
 	}
 
-	public ClassModuleDecl(Library lib) {
+	public ClassModuleDecl(Library lib, Compiler compiler) {
 		super(lib);
+		this.compiler = compiler;
 		this.moduleType = ModuleType.ClassModule;
 
 		MeDecl me = new MeDecl(lib, this);
@@ -48,17 +50,17 @@ public class ClassModuleDecl extends ModuleDecl {
 		super(null);
 	}
 
-	private void addTheBaseObjDecl() {
+	protected void addTheBaseObjDecl() {
 		if (this instanceof TheClass)
 			return;
 
 		VarDecl c = new VarDecl(this.library, this);
 		c.name = "Class";
 		c.withEvents = true;
-		c.visibility = Visibility.PRIVATE;
+		c.visibility = Visibility.PRIVATE;	// TODO HIDDEN
 		c.withNew = true;
 
-		ClassTypeDecl classTypeDecl = new ClassTypeDecl(library, new TheClass(library));
+		ClassTypeDecl classTypeDecl = new ClassTypeDecl(library, new TheClass(library, compiler));
 		c.varType = new VbVarType(VbVarType.vbObject, classTypeDecl, null, null);
 
 		this.addMember(c);
@@ -134,7 +136,7 @@ public class ClassModuleDecl extends ModuleDecl {
 
 	private void buildImplements(ClassTypeDecl implement, ImplementsStmtContext ast) throws CompileException {
 		ClassModuleDecl implCls = implement.classModule;
-		ImplementorClassModuleDecl implementor = new ImplementorClassModuleDecl(this.library);
+		ImplementorClassModuleDecl implementor = new ImplementorClassModuleDecl(this.library, this.compiler);
 		implementor.name = implement.name;
 		implementor.visibility = implement.visibility;
 		for(VbDecl implDecl : implCls.members.values()){

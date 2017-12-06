@@ -151,7 +151,9 @@ public class ModuleDecl extends VbDecl {
 
 	@Override
 	public String toString() {
-		String s = "";
+		String s = "Module ";
+		if(this.library != null) s += this.library.name + ".";
+		s += this.name + "\r\n";
 		for (VbDecl member : members.values()) {
 			if(member instanceof MethodDecl){
 				s += ((MethodDecl) member).toDeclString() + "\r\n";

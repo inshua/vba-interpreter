@@ -11,6 +11,7 @@ import org.siphon.visualbasic.Library;
 import org.siphon.visualbasic.MeDecl;
 import org.siphon.visualbasic.MethodDecl;
 import org.siphon.visualbasic.ModuleMemberDecl;
+import org.siphon.visualbasic.ModuleType;
 import org.siphon.visualbasic.VarDecl;
 import org.siphon.visualbasic.VbDecl;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;
@@ -57,9 +58,16 @@ public class CallFrame {
 				return this.module.variables.get(varDecl);
 			} else {
 				if (moduleInstance == null) {
-					String libName = varDecl.module.library.name.toUpperCase();
+					String libName = varDecl.getLibrary().name.toUpperCase();
 					RuntimeLibrary lib = (RuntimeLibrary) libs.get(libName);
-					moduleInstance = lib.modules.get(varDecl.module.name.toUpperCase());
+					if(varDecl.module != null) {
+						moduleInstance = lib.modules.get(varDecl.module.name.toUpperCase());
+					}
+					if(moduleInstance == null) {
+						if(lib.variables.containsKey(varDecl)) {
+							return lib.variables.get(varDecl);
+						}
+					}
 				}
 				return moduleInstance.variables.get(varDecl);
 			}
@@ -82,7 +90,7 @@ public class CallFrame {
 	}
 
 	public ModuleInstance locateRuntimeModule(ModuleMemberDecl decl) {
-		RuntimeLibrary runtimeLib = (RuntimeLibrary) libs.get(decl.library.upperCaseName());
+		RuntimeLibrary runtimeLib = (RuntimeLibrary) libs.get(decl.getLibrary().upperCaseName());
 		return runtimeLib.modules.get(decl.module.upperCaseName());
 	}
 

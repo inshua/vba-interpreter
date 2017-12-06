@@ -13,8 +13,8 @@ public class ImplementorClassModuleDecl extends ClassModuleDecl {
 
 	public Map<VbDecl, VbDecl> mirrors = new HashMap<>();
 
-	public ImplementorClassModuleDecl(Library lib) {
-		super(lib);
+	public ImplementorClassModuleDecl(Library lib, Compiler compiler) {
+		super(lib, compiler);
 	}
 
 	public VbDecl getMirrorMember(VbDecl decl) {

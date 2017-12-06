@@ -452,7 +452,7 @@ public class ValueStatementCompiler {
 			String path = firstId;
 			Token end = first.stop;
 			
-			VbDecl[] decls = compiler.names.findAccessibleDecls(path, method.module.library);
+			VbDecl[] decls = compiler.names.findAccessibleDecls(path, method.getLibrary());
 			if (decls.length == 0) {
 				//
 			} else if (decls.length == 1) {
@@ -470,7 +470,7 @@ public class ValueStatementCompiler {
 					end = follower.stop;
 					path = path + follower.getText().toUpperCase();
 					
-					decls = compiler.names.findAccessibleDecls(path, method.module.library);
+					decls = compiler.names.findAccessibleDecls(path, method.getLibrary());
 					if (decls.length == 0) {
 						break;
 					} else if (decls.length == 1) {

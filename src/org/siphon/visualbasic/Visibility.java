@@ -4,5 +4,6 @@ public enum Visibility {
 	PRIVATE,
 	PUBLIC,
 	FRIEND,
-	GLOBAL;
+	GLOBAL,
+	Hidden;
 }

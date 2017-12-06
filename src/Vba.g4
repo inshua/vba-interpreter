@@ -101,6 +101,7 @@ module :
 	WS?
 	endOfLine*
 	(moduleHeader endOfLine*)?
+	(controlDeclaration endOfLine*)?
 	moduleConfig? endOfLine*
 	moduleAttributes? endOfLine*
 	moduleDeclarations? endOfLine*
@@ -108,7 +109,7 @@ module :
 	WS?
 ;
 
-moduleHeader : VERSION WS DOUBLELITERAL WS CLASS;
+moduleHeader : VERSION WS DOUBLELITERAL (WS CLASS)?;
 
 moduleConfig :
 	BEGIN endOfLine*
@@ -118,6 +119,13 @@ moduleConfig :
 
 moduleConfigElement :
 	ambiguousIdentifier WS? EQ WS? literal endOfLine*
+;
+
+controlDeclaration :
+	BEGIN WS type WS ambiguousIdentifier endOfLine*
+		moduleConfigElement+
+		controlDeclaration *
+	END
 ;
 
 moduleAttributes : (attributeStmt endOfLine+)+;

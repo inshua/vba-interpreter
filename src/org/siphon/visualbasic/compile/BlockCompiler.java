@@ -94,6 +94,7 @@ import vba.VbaParser.ImplicitCallStmt_InStmtContext;
 import vba.VbaParser.InlineIfThenElseContext;
 import vba.VbaParser.LetStmtContext;
 import vba.VbaParser.LineLabelContext;
+import vba.VbaParser.LoadStmtContext;
 import vba.VbaParser.MidStmtContext;
 import vba.VbaParser.OnErrorStmtContext;
 import vba.VbaParser.PrintStmtContext;
@@ -408,6 +409,9 @@ public class BlockCompiler {
 		} else if(ast instanceof MidStmtContext){
 			compileMidStmt((MidStmtContext)ast);
 			
+		} else if(ast instanceof LoadStmtContext) {
+			compileLoadStmt((LoadStmtContext)ast);
+			
 		} else {
 			throw new ImpossibleException();
 		}
@@ -432,6 +436,10 @@ public class BlockCompiler {
 		compiler.mustBeBaseType(str.getVarType(), strStmt);
 		
 		result.add(new MidStatment(module.sourceLocation(ast), (VarDecl) varDecl, start.getStatement(), length == null ? null : length.getStatement(), str.getStatement()));
+	}
+	
+	private void compileLoadStmt(LoadStmtContext ast) {
+		// TODO
 	}
 
 	private void compileRedimStmt(RedimStmtContext ast) throws CompileException {

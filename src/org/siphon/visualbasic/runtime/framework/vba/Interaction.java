@@ -7,13 +7,21 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.siphon.visualbasic.ArgumentException;
 import org.siphon.visualbasic.ClassTypeDecl;
+import org.siphon.visualbasic.Interpreter;
+import org.siphon.visualbasic.MethodDecl;
+import org.siphon.visualbasic.PropertyDecl;
+import org.siphon.visualbasic.VbDecl;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;
+import org.siphon.visualbasic.runtime.CallFrame;
+import org.siphon.visualbasic.runtime.ModuleInstance;
 import org.siphon.visualbasic.runtime.VbArray;
 import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVarType.TypeEnum;
+import org.siphon.visualbasic.runtime.framework.Enums.VbCallType;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 import org.siphon.visualbasic.runtime.framework.VbParam;
 import org.siphon.visualbasic.runtime.statements.EvalAssignableStatement;
@@ -126,4 +134,49 @@ public class Interaction {
 		return null;
 	}
 	
+	@VbMethod(withIntepreter=true, value = "Function CallByName(obj As Object, ProcName As String, CallType As VbCallType, Args() As Variant)")
+	public static VbValue CallByName(
+			Interpreter interpreter,
+			CallFrame callFrame,
+			VbValue object, 
+			String procName,
+			int callType,
+			VbValue arguments) throws VbRuntimeException, ArgumentException{
+		
+		if(object == null || object.isObject() == false) {
+			throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+		}
+		ModuleInstance instance = (ModuleInstance) object.value;
+		VbDecl method = (VbDecl) instance.getMember(procName);
+		if(method == null) {
+			throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法);
+		}
+		switch(callType) {
+		case VbCallType.VbMethod :
+			method = null;
+			break;
+		case VbCallType.VbGet :
+			if(method instanceof PropertyDecl == false) {
+				throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法);
+			}
+			method = ((PropertyDecl)method).get;
+			break;
+		case VbCallType.VbLet :
+			if(method instanceof PropertyDecl == false) {
+				throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法);
+			}
+			method = ((PropertyDecl)method).let;
+			break;
+		case VbCallType.VbSet :
+			if(method instanceof PropertyDecl == false) {
+				throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法);
+			}
+			method = ((PropertyDecl)method).set;
+			break;
+		}
+		if(method == null) {
+			throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法);
+		}
+		return interpreter.callMethod(instance, (MethodDecl)method, arguments);
+	}
 }

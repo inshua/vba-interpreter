@@ -118,7 +118,7 @@ public class VbVariable {
 			if(currCls == myClass){
 				this.value = value;
 			} else {
-				VbVarType t = new VbVarType(VbVarType.vbObject, new ClassTypeDecl(instCls.library, instCls), null, null);
+				VbVarType t = new VbVarType(VbVarType.vbObject, new ClassTypeDecl(instCls.getLibrary(), instCls), null, null);
 				this.value = new VbValue(t, inst);
 			}
 		} else if(instCls.isImplementFrom(myClass)){

@@ -78,7 +78,9 @@ public class Project {
 				}
 				
 				else if(key.equalsIgnoreCase("Form")){
-					
+					File file = new File(prj.getParentFile(), value);
+					if(!file.exists()) throw new IOException(String.format("%s not found", value));
+					this.moduleFiles.add(file);
 				}
 				
 				else if(key.equalsIgnoreCase("Startup")){		// "Sub Main" or "Form1" or "(None)"

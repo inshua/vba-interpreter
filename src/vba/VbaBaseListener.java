@@ -1,5 +1,6 @@
-// Generated from Vba.g4 by ANTLR 4.5.3
 package vba;
+
+// Generated from Vba.g4 by ANTLR 4.5.3
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -71,6 +72,18 @@ public class VbaBaseListener implements VbaListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitModuleConfigElement(VbaParser.ModuleConfigElementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterControlDeclaration(VbaParser.ControlDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitControlDeclaration(VbaParser.ControlDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

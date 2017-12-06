@@ -1,5 +1,6 @@
-// Generated from Vba.g4 by ANTLR 4.5.3
 package vba;
+
+// Generated from Vba.g4 by ANTLR 4.5.3
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -57,6 +58,16 @@ public interface VbaListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitModuleConfigElement(VbaParser.ModuleConfigElementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VbaParser#controlDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterControlDeclaration(VbaParser.ControlDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VbaParser#controlDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitControlDeclaration(VbaParser.ControlDeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link VbaParser#moduleAttributes}.
 	 * @param ctx the parse tree

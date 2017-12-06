@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 
 import org.siphon.visualbasic.Project.ProjectType;
 import org.siphon.visualbasic.compile.CompileException;
@@ -40,6 +41,7 @@ import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVariable;
 import org.siphon.visualbasic.runtime.framework.Debug;
+import org.siphon.visualbasic.runtime.framework.vb.Form;
 import org.siphon.visualbasic.runtime.framework.vba.Math;
 import org.siphon.visualbasic.runtime.framework.vba.VBALibrary;
 import org.siphon.visualbasic.runtime.statements.NamedArgumentStatement;
@@ -131,6 +133,12 @@ public class Interpreter {
 					Object obj = ((JavaModuleInstance) runtimeModule).getInstance();
 					return VbValue.fromJava(javaMethod.javaMethod.invoke(obj,
 							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
+				} else if(runtimeModule.getModuleDecl() instanceof FormModuleDecl) {
+					VbDecl decl = (VbDecl) runtimeModule.getMember("FORM");
+					VbVariable var = runtimeModule.variables.get(decl);
+					JavaModuleInstance inst = (JavaModuleInstance) var.value.value;
+					return VbValue.fromJava(javaMethod.javaMethod.invoke(inst.getInstance(),
+							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
 				} else {
 					return VbValue.fromJava(javaMethod.javaMethod.invoke(null,
 							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
@@ -163,7 +171,7 @@ public class Interpreter {
 		
 		Object[] result = new Object[paramTypes.length];
 		int offset = 0;
-		if(method.isWithIntepreter()){
+		if(method.isWithInterpreter()){
 			result[0] = this;
 			result[1] = callFrame;
 			offset = 2;
@@ -387,7 +395,9 @@ public class Interpreter {
 		}
 		Library lib = compiler.compile(project.getName(), (String[]) files.toArray(new String[files.size()]));
 
+		System.out.println("compiled code");
 		System.out.println(lib);
+		System.out.println("----- above ----");
 
 		this.load(compiler.generateStatements());
 
@@ -405,6 +415,9 @@ public class Interpreter {
 				if (subMain == null)
 					throw new NotFoundException("Sub Main not found");
 				this.callMethod(subMain);
+			} else {
+				FormModuleDecl formDecl = (FormModuleDecl) lib.modules.get(s.toUpperCase());
+				// TODO
 			}
 		}
 	}
@@ -516,6 +529,45 @@ public class Interpreter {
 
 	public CallFrame getCurrentFrame() {
 		return callFrames.peek();
+	}
+
+	public void initControl(JavaModuleInstance formInstance, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
+		Map<String, VbValue> attrs = controlDef.getAttributes();
+
+		ModuleDecl formDecl = this.runtimeLibs.get("VB").getLibrary().modules.get("FORM");
+		for(String attr : attrs.keySet()) {
+			System.out.println("set " + attr + " to " + attrs.get(attr));
+			VbDecl member = formDecl.members.get(attr.toUpperCase());
+			if(member == null) continue;	// attr not impelement yet
+			
+			if(member instanceof PropertyDecl == false) {
+				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+			} 
+			PropertyDecl pd = (PropertyDecl) member;
+			MethodDecl let = pd.let;
+			if(let == null) {
+				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+			}
+			this.callMethod(formInstance, let, attrs.get(attr));
+		}
+		
+	}
+
+	public void ensureFormLoaded(ModuleInstance instance) throws VbRuntimeException, ArgumentException {
+		FormModuleDecl formDecl = (FormModuleDecl) instance.getModuleDecl();
+		VarDecl varDecl = (VarDecl) formDecl.members.get("FORM");
+		VbVariable var = instance.variables.get(formDecl.members.get("FORM"));
+		JavaModuleInstance jmi = (JavaModuleInstance) var.value.value;
+		Form form = (Form) jmi.getInstance();
+		if(!form.isLoaded()) {	// 当访问窗体的属性方法时自动加载窗体
+			form.setInitForm(new Callback() {
+				@Override
+				public void run() throws VbRuntimeException, ArgumentException {
+					Interpreter.this.initControl(jmi, formDecl.getControlDef());
+				}
+			});
+			form.load(this, this.getCurrentFrame());
+		}
 	}
 
 }

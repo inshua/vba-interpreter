@@ -35,6 +35,7 @@ public class CompileException extends Exception {
 	public static final String DEFAULT_MEMBER_REQUIRED = "%s: default member required: %s";
 	public static final String TYPE_HINT_MISMATCH = "%s: type hint not match to type clause: %s";
 	public static final String IMPLEMENT_NOT_MATCH = "%s: implement '%s' not match for '%s'";
+	public static final String MEMBER_NOT_EXIST = "%s: member not found: %s";
 	public static String IMPLEMENT_NOT_FOUND = "%s: '%s' not implement for '%s'";
 	private SourceLocation sourceLocation;
 	

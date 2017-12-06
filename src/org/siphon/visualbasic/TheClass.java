@@ -6,8 +6,8 @@ public class TheClass extends ClassModuleDecl {
 	public final EventDecl initializeEvent;
 	public final EventDecl terminateEvent;
 
-	public TheClass(Library lib) {
-		super(lib);
+	public TheClass(Library lib, org.siphon.visualbasic.compile.Compiler compiler) {
+		super(lib, compiler);
 		
 		EventDecl initialize = new EventDecl(lib, this);
 		initialize.name = "Initialize";

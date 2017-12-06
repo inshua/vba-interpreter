@@ -11,4 +11,12 @@ public class ModuleMemberDecl extends VbDecl {
 		this.module = module;
 	}
 	
+	public Library getLibrary() {
+		if(this.library == null) {
+			if(this.module != null) 
+				return this.module.library;
+		}
+		return this.library;
+	}
+	
 }
