@@ -1,5 +1,6 @@
 package org.siphon.visualbasic;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +39,13 @@ public class ControlDef {
 	public Map<String, VbValue> getAttributes() {
 		return attributes;
 	}
+	
+	public Map<String, ControlDef> getComplexAttributes() {
+		return complexAttributes;
+	}
 
 	private String name;
 	private Map<String, VbValue> attributes = new TreeMap<>();
-	private List<ControlDef> children;
+	private Map<String, ControlDef> complexAttributes = new TreeMap<>();
+	private List<ControlDef> children = new ArrayList<>();
 }

@@ -76,6 +76,7 @@ import org.stringtemplate.v4.compiler.Bytecode.OperandType;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.CompilerException;
 
 import jdk.nashorn.internal.ir.BlockStatement;
+import sun.java2d.pipe.SpanShapeRenderer.Simple;
 import sun.util.locale.BaseLocale;
 import vba.VbaLexer;
 import vba.VbaParser;
@@ -89,6 +90,7 @@ import vba.VbaParser.AsTypeClauseContext;
 import vba.VbaParser.AttributeStmtContext;
 import vba.VbaParser.BaseTypeContext;
 import vba.VbaParser.BlockContext;
+import vba.VbaParser.ComplexPropertyContext;
 import vba.VbaParser.ComplexTypeContext;
 import vba.VbaParser.ConstStmtContext;
 import vba.VbaParser.ConstSubStmtContext;
@@ -125,6 +127,7 @@ import vba.VbaParser.ImplementsStmtContext;
 import vba.VbaParser.ImplicitCallStmt_InStmtContext;
 import vba.VbaParser.LiteralContext;
 import vba.VbaParser.ModuleAttributesContext;
+import vba.VbaParser.ModuleBagPropertyContext;
 import vba.VbaParser.ModuleBodyElementContext;
 import vba.VbaParser.ModuleConfigElementContext;
 import vba.VbaParser.ModuleContext;
@@ -135,6 +138,7 @@ import vba.VbaParser.PropertyGetStmtContext;
 import vba.VbaParser.PropertyLetStmtContext;
 import vba.VbaParser.PropertySetStmtContext;
 import vba.VbaParser.RuleStmtContext;
+import vba.VbaParser.SimplePropertyContext;
 import vba.VbaParser.SubStmtContext;
 import vba.VbaParser.SubscriptContext;
 import vba.VbaParser.SubscriptsContext;
@@ -488,7 +492,9 @@ public class Compiler {
 
 		if (moduleAst.moduleConfig() != null) {
 			for (ModuleConfigElementContext config : moduleAst.moduleConfig().moduleConfigElement()) {
-				setModuleConfig(moduleDecl, config);
+				if(config instanceof SimplePropertyContext) {
+					setModuleConfig(moduleDecl, (SimplePropertyContext) config);
+				}
 			}
 		}
 
@@ -534,21 +540,36 @@ public class Compiler {
 		result.setType(this.parseType(controlDeclAst.type(), null, moduleDecl));
 		result.setName(controlDeclAst.ambiguousIdentifier().getText());
 			
-		for (ModuleConfigElementContext config : controlDeclAst.moduleConfigElement()) {
-			String id = config.ambiguousIdentifier().getText();
-			VbValue val;
-			try {
-				val = parseLiteral(config.literal(), moduleDecl);
-				result.getAttributes().put(id, val);
-			} catch (CompileException e) {
-				moduleDecl.addCompileException(e);
-			}
-		}
+		this.passControlDefAttrs(result, controlDeclAst.moduleConfigElement(), moduleDecl);
 		for(ControlDeclarationContext child : controlDeclAst.controlDeclaration()) {
 			result.getChildren().add(parseControlDecl(child, moduleDecl));
 		}
 		return result;
 	}
+
+	private void passControlDefAttrs(ControlDef result, List<ModuleConfigElementContext> moduleConfigElements, ModuleDecl moduleDecl) {
+		for (ModuleConfigElementContext config : moduleConfigElements) {
+			if(config instanceof SimplePropertyContext) {
+				SimplePropertyContext simple = (SimplePropertyContext)config;
+				String id = simple.ambiguousIdentifier().getText();
+				VbValue val;
+				try {
+					val = parseLiteral(simple.literal(), moduleDecl);
+					result.getAttributes().put(id, val);
+				} catch (CompileException e) {
+					moduleDecl.addCompileException(e);
+				}
+			} else {
+				ComplexPropertyContext complex = (ComplexPropertyContext) config;
+				String id = complex.moduleBagProperty().ambiguousIdentifier().getText();
+				ControlDef val = new ControlDef();
+				val.setName(id);
+				result.getComplexAttributes().put(id, val);
+				passControlDefAttrs(val, complex.moduleBagProperty().moduleConfigElement(), moduleDecl);
+			}
+		}
+	}
+
 
 	/**
 	 * 编译全局变量和方法。
@@ -697,7 +718,7 @@ public class Compiler {
 		}
 	}
 
-	private void setModuleConfig(ModuleDecl moduleDecl, ModuleConfigElementContext config) {
+	private void setModuleConfig(ModuleDecl moduleDecl, SimplePropertyContext config) {
 		String id = config.ambiguousIdentifier().getText();
 		Object val;
 		try {

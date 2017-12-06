@@ -12,6 +12,9 @@ public class VBLibrary extends Library{
 		
 		JavaClassModuleDecl formDecl = new JavaClassModuleDecl(this, compiler, Form.class);
 		this.addModule(formDecl);
+		
+		this.addModule(new JavaClassModuleDecl(this, compiler, CommandButton.class));
+		this.addModule(new JavaClassModuleDecl(this, compiler, TextBox.class));
 	}
 	
 

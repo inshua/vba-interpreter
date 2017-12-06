@@ -28,6 +28,17 @@ public class FormModuleDecl extends ClassModuleDecl {
 		super(library, compiler);
 		this.controlDef = controlDef;
 		this.moduleType = ModuleType.Form;
+		
+		for(ControlDef child : controlDef.getChildren()) {
+			VbVarType type = child.getType();			
+			VarDecl control = new VarDecl(this.library, this);
+			control.visibility = Visibility.PRIVATE;
+			control.varType = type;
+			control.name = child.getName();
+			control.withEvents = true;
+			control.withNew = true;
+			this.addMember(control);
+		}
 	}
 	
 

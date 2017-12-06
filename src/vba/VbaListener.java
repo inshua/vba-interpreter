@@ -49,15 +49,39 @@ public interface VbaListener extends ParseTreeListener {
 	 */
 	void exitModuleConfig(VbaParser.ModuleConfigContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link VbaParser#moduleConfigElement}.
+	 * Enter a parse tree produced by the {@code complexProperty}
+	 * labeled alternative in {@link VbaParser#moduleConfigElement}.
 	 * @param ctx the parse tree
 	 */
-	void enterModuleConfigElement(VbaParser.ModuleConfigElementContext ctx);
+	void enterComplexProperty(VbaParser.ComplexPropertyContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link VbaParser#moduleConfigElement}.
+	 * Exit a parse tree produced by the {@code complexProperty}
+	 * labeled alternative in {@link VbaParser#moduleConfigElement}.
 	 * @param ctx the parse tree
 	 */
-	void exitModuleConfigElement(VbaParser.ModuleConfigElementContext ctx);
+	void exitComplexProperty(VbaParser.ComplexPropertyContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code simpleProperty}
+	 * labeled alternative in {@link VbaParser#moduleConfigElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSimpleProperty(VbaParser.SimplePropertyContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code simpleProperty}
+	 * labeled alternative in {@link VbaParser#moduleConfigElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSimpleProperty(VbaParser.SimplePropertyContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VbaParser#moduleBagProperty}.
+	 * @param ctx the parse tree
+	 */
+	void enterModuleBagProperty(VbaParser.ModuleBagPropertyContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VbaParser#moduleBagProperty}.
+	 * @param ctx the parse tree
+	 */
+	void exitModuleBagProperty(VbaParser.ModuleBagPropertyContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link VbaParser#controlDeclaration}.
 	 * @param ctx the parse tree

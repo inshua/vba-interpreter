@@ -59,6 +59,10 @@ public class SourceLocation {
 
 	@Override
 	public String toString() {
-		return String.format("[%s %s:%s %s]", sourceFile.getName(), line, column, length);
+		String name = "UNKNOWN";
+		if(sourceFile != null) { 
+			name = sourceFile.getName();
+		}
+		return String.format("[%s %s:%s %s]", name, line, column, length);
 	}
 }

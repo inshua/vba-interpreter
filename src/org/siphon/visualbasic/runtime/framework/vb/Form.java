@@ -64,7 +64,7 @@ public class Form {
 		frame.setSize(clientWidth + insets.left + insets.right, frame.getHeight());
 	}
 	
-	private int toPixel(int length, int scaleMode) {
+	public int toPixel(int length, int scaleMode) {
 		int pixelPerInch = java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
 		switch(scaleMode) {
 		case 2: // Point
@@ -91,7 +91,7 @@ public class Form {
 		}
 	}
 	
-	private int fromPixel(int pixel, int scaleMode) {
+	public int fromPixel(int pixel, int scaleMode) {
 		int pixelPerInch = java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
 		switch(scaleMode) {
 		case 2: // Point

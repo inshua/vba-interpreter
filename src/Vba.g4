@@ -118,14 +118,21 @@ moduleConfig :
 ;
 
 moduleConfigElement :
-	ambiguousIdentifier WS? EQ WS? literal endOfLine*
+	moduleBagProperty										# complexProperty
+	| ambiguousIdentifier WS? EQ WS? literal endOfLine*		# simpleProperty
+;
+
+moduleBagProperty :
+	BEGINPROPERTY WS ambiguousIdentifier endOfLine+
+		moduleConfigElement+  
+	ENDPROPERTY endOfLine+
 ;
 
 controlDeclaration :
 	BEGIN WS type WS ambiguousIdentifier endOfLine*
-		moduleConfigElement+
+		moduleConfigElement +
 		controlDeclaration *
-	END
+	END endOfLine+
 ;
 
 moduleAttributes : (attributeStmt endOfLine+)+;
@@ -801,6 +808,8 @@ APPACTIVATE : A P P A C T I V A T E;
 APPEND : A P P E N D;
 AS : A S;
 BEGIN : B E G I N;
+BEGINPROPERTY : B E G I N P R O P E R T Y;
+ENDPROPERTY : E N D P R O P E R T Y;
 BEEP : B E E P;
 BINARY : B I N A R Y;
 BOOLEAN : B O O L E A N;

@@ -65,13 +65,37 @@ public class VbaBaseListener implements VbaListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterModuleConfigElement(VbaParser.ModuleConfigElementContext ctx) { }
+	@Override public void enterComplexProperty(VbaParser.ComplexPropertyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitModuleConfigElement(VbaParser.ModuleConfigElementContext ctx) { }
+	@Override public void exitComplexProperty(VbaParser.ComplexPropertyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSimpleProperty(VbaParser.SimplePropertyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSimpleProperty(VbaParser.SimplePropertyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterModuleBagProperty(VbaParser.ModuleBagPropertyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitModuleBagProperty(VbaParser.ModuleBagPropertyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

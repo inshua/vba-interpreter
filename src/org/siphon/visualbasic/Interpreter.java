@@ -45,6 +45,7 @@ import org.siphon.visualbasic.runtime.framework.vb.Form;
 import org.siphon.visualbasic.runtime.framework.vba.Math;
 import org.siphon.visualbasic.runtime.framework.vba.VBALibrary;
 import org.siphon.visualbasic.runtime.statements.NamedArgumentStatement;
+import org.siphon.visualbasic.runtime.statements.ShowFormStatement;
 
 import com.sun.corba.se.impl.naming.pcosnaming.NameServer;
 
@@ -417,7 +418,11 @@ public class Interpreter {
 				this.callMethod(subMain);
 			} else {
 				FormModuleDecl formDecl = (FormModuleDecl) lib.modules.get(s.toUpperCase());
-				// TODO
+				RuntimeLibrary runtimeLib = this.runtimeLibs.get(project.getName().toUpperCase());
+				VbVariable form = runtimeLib.variables.get(formDecl.getVarDecl());
+				MethodDecl subMain = new MethodDecl(lib, formDecl, MethodType.Sub);
+				subMain.statements.add(new ShowFormStatement(form));
+				this.callMethod(subMain);
 			}
 		}
 	}
@@ -531,12 +536,29 @@ public class Interpreter {
 		return callFrames.peek();
 	}
 
-	public void initControl(JavaModuleInstance formInstance, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
+	// TODO 部分属性应考虑使用 batch 方式一次性提交，有些属性是有连带效应的，如 ScaleMode 等
+	public void initControl(ModuleInstance thisForm, JavaModuleInstance baseForm, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
 		Map<String, VbValue> attrs = controlDef.getAttributes();
 
-		ModuleDecl formDecl = this.runtimeLibs.get("VB").getLibrary().modules.get("FORM");
+		// ModuleDecl formDecl = this.runtimeLibs.get("VB").getLibrary().modules.get("FORM");
+		ModuleDecl formDecl = thisForm.getModuleDecl();
+		applyAttributes(baseForm, attrs, formDecl);
+		
+		for(ControlDef child : controlDef.getChildren()) {
+			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
+			VbVariable var = thisForm.variables.get(controlDecl);
+			JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
+			MethodDecl load = (MethodDecl) controlDecl.varType.typeDecl.getMember("LOAD");
+			this.callMethod(controlInst, load, thisForm);
+			
+			applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
+		}
+	}
+
+	private void applyAttributes(JavaModuleInstance formInstance, Map<String, VbValue> attrs, ModuleDecl formDecl)
+			throws VbRuntimeException, ArgumentException {
 		for(String attr : attrs.keySet()) {
-			System.out.println("set " + attr + " to " + attrs.get(attr));
+//			System.out.println("set " + attr + " to " + attrs.get(attr));
 			VbDecl member = formDecl.members.get(attr.toUpperCase());
 			if(member == null) continue;	// attr not impelement yet
 			
@@ -550,12 +572,10 @@ public class Interpreter {
 			}
 			this.callMethod(formInstance, let, attrs.get(attr));
 		}
-		
 	}
 
 	public void ensureFormLoaded(ModuleInstance instance) throws VbRuntimeException, ArgumentException {
 		FormModuleDecl formDecl = (FormModuleDecl) instance.getModuleDecl();
-		VarDecl varDecl = (VarDecl) formDecl.members.get("FORM");
 		VbVariable var = instance.variables.get(formDecl.members.get("FORM"));
 		JavaModuleInstance jmi = (JavaModuleInstance) var.value.value;
 		Form form = (Form) jmi.getInstance();
@@ -563,7 +583,7 @@ public class Interpreter {
 			form.setInitForm(new Callback() {
 				@Override
 				public void run() throws VbRuntimeException, ArgumentException {
-					Interpreter.this.initControl(jmi, formDecl.getControlDef());
+					Interpreter.this.initControl((ModuleInstance) instance, jmi, formDecl.getControlDef());
 				}
 			});
 			form.load(this, this.getCurrentFrame());
