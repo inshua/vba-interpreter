@@ -442,15 +442,13 @@ public class ValueStatementCompiler {
 			assert (first instanceof MemberCallContext) || (first instanceof DictionaryCallContext);
 			thrumb.add(first);
 			
-		} else if (method.variables.containsKey(firstId) || method.module.members.containsKey(firstId)) {	// || (second != null && second.getToken(VbaParser.LPAREN, 0) != null)
-
-			base = method.variables.get(firstId);
-			if (base == null) {
-				base = method.module.members.get(firstId);
+		} else {
+			base = compiler.findDeclInScope(first, method, false);
+			if(base != null) {
+				baseLoacation = method.module.sourceLocation(first);
 			}
-			assert base != null;
-			baseLoacation = method.module.sourceLocation(first);
-		} else { // macth pattern in names
+		} 
+		if(base == null){ // macth pattern in names
 			String path = firstId;
 			Token end = first.stop;
 			
@@ -630,6 +628,8 @@ public class ValueStatementCompiler {
 						result = result.bind(method.module.sourceLocation(ast), member);
 						base = member;
 						afterFunctionCalled = member instanceof MethodDecl || (member instanceof PropertyDecl && ((PropertyDecl)member).isReadonly());
+					} else if (member == null) {
+						throw method.module.newCompileException(mc.ambiguousIdentifier(), CompileException.MEMBER_NOT_EXIST, mc.ambiguousIdentifier().getText());
 					}
 				} else if(ast instanceof DictionaryCallContext){
 					if(type.isDictionary()){
