@@ -20,6 +20,13 @@ public class VbArray extends VbValue {
 
 	private List<VbValue> values;
 	
+	private boolean controlArray;		// 是否为控件数组
+	// TODO 控件数组应单独实现为一种数据类型
+	
+	public boolean isControlArray() {
+		return controlArray;
+	}
+
 	public List<VbValue> toList(){
 		return Collections.unmodifiableList(values);
 	}
@@ -140,5 +147,9 @@ public class VbArray extends VbValue {
 				new ArrayDef.Rank[] { new ArrayDef.Rank(lBound, uBound) });
 		VbVarType arrType = new VbVarType(VbVarType.vbArray, null, paramArrayDef, null);
 		return new VbArray(arrType);
+	}
+
+	public void setControlArray(boolean controlArray) {
+		this.controlArray = controlArray;
 	}
 }

@@ -12,6 +12,18 @@ public class Control extends VbBindObject {
 	
 	protected Form form;
 	
+	protected Integer index = null;		// 控件数组索引  
+	
+	@VbMethod
+	public Integer getIndex() {
+		return index;
+	}
+
+	@VbMethod
+	public void setIndex(Integer index) {
+		this.index = index;
+	}
+
 	public void load(Form form, Interpreter interpreter) {
 		
 	}

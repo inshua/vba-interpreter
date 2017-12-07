@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -559,16 +560,22 @@ public class Interpreter {
 		for(ControlDef child : controlDef.getChildren()) {
 			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
 			VbVariable var = thisForm.variables.get(controlDecl);
-			var.setReadonly(false);
-			var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
-			var.assign(var.value, this, this.getCurrentFrame(), null);
-			var.setReadonly(true);
-			JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
-			Control control = (Control) controlInst.getInstance();
-			control.load(form, this);
-			
-			applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
-			applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
+			if(var.varType.isArray()) {
+				VbArray arr = (VbArray) var.varType.crateDefaultValue();
+				arr.setControlArray(true);
+				arr.set();
+			} else {
+				var.setReadonly(false);
+				var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
+				var.assign(var.value, this, this.getCurrentFrame(), null);	// 使触发 bind event handlers
+				var.setReadonly(true);
+				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
+				Control control = (Control) controlInst.getInstance();
+				control.load(form, this);
+				
+				applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
+				applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
+			}
 		}
 	}
 

@@ -485,4 +485,8 @@ public class VbVarType {
 			
 	}
 
+	public boolean isArray() {
+		return this.vbType == VbVarType.vbArray;
+	}
+
 }

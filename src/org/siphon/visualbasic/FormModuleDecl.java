@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.siphon.visualbasic.compile.CompileException;
 import org.siphon.visualbasic.compile.Compiler;
 import org.siphon.visualbasic.compile.ImplementorClassModuleDecl;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;
+import org.siphon.visualbasic.runtime.ArrayDef;
 import org.siphon.visualbasic.runtime.CallFrame;
 import org.siphon.visualbasic.runtime.ModuleInstance;
 import org.siphon.visualbasic.runtime.RuntimeLibrary;
@@ -51,19 +53,51 @@ public class FormModuleDecl extends ClassModuleDecl {
 		this.varDecl = varDecl;
 
 		// 初始化成员
-		for(ControlDef child : controlDef.getChildren()) {
+		for(ControlDef child : controlDef.getChildren()) {			
 			VbVarType type = child.getType();			
+			if(child.getAttributes().containsKey("Index")) {
+				if(this.members.containsKey(child.getName().toUpperCase()) == false) {
+					int maxIndex = findMaxControlArrayIndex(child.getName());
+					type = type.toArrayType(new ArrayDef.Rank[] {new ArrayDef.Rank(0, maxIndex)});
+				} else {
+					continue;
+				}
+			} 
 			VarDecl controlDecl = new VarDecl(this.library, this);
 			controlDecl.visibility = Visibility.PRIVATE;
 			controlDecl.varType = type;
 			controlDecl.name = child.getName();
 			controlDecl.withEvents = true;
-			controlDecl.withNew = true;
+			if(!type.isArray()) controlDecl.withNew = true;
 			this.addMember(controlDecl);
 			this.controlDecls.add(controlDecl);
 		}
 	}
 	
+
+	private int findMaxControlArrayIndex(String name) {
+		int result = 0;
+		Stack<ControlDef> stk = new Stack<>();
+		for(ControlDef child : this.controlDef.getChildren()) {
+			stk.push(child);
+		}
+		while(stk.isEmpty() == false) {
+			ControlDef def = stk.pop();
+			if(def.getName().equalsIgnoreCase(name)) {
+				VbValue index = def.getAttributes().get("Index");
+				if(index != null) {
+					Integer i = (Integer) index.toJava();
+					if(i > result) {
+						result = i;
+					}
+				}
+			}
+			for(ControlDef child : def.getChildren()) {
+				stk.push(child);
+			}
+		}
+		return result;
+	}
 
 	protected void addTheBaseObjDecl() {
 		VarDecl c = new VarDecl(this.library, this);
@@ -105,13 +139,9 @@ public class FormModuleDecl extends ClassModuleDecl {
 		for(VarDecl decl : controlDecls) {
 			VbVariable control = decl.createVar();
 			control.setReadonly(true);
-//			ModuleInstance inst = new ModuleInstance(control.varType.getClassModuleDecl());
-//			inst.initializeClass(interpreter, callFrame);
 			formInstance.variables.put(decl, control);
-//			control.assign(inst.asVbValue(), interpreter, callFrame, null);
 		}
 	}
-
 
 	public VarDecl getVarDecl() {
 		return varDecl;

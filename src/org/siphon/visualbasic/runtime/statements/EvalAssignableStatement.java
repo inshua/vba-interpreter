@@ -418,7 +418,7 @@ public class EvalAssignableStatement extends Statement {
 				}
 				indexes[i++] = (Integer) v;
 			}
-			array.set(indexes, value.clone(), sourceLocation);
+			array.set(indexes, value.clone(), sourceLocation);			
 		}
 
 		@Override
