@@ -65,64 +65,7 @@ public class JavaClassModuleDecl extends ClassModuleDecl {
 		}
 		
 		for(Method method : this.javaClass.getMethods()){
-			int modifier = method.getModifiers();
-			if(Modifier.isStatic(modifier) == false && Modifier.isPublic(modifier) && method.getDeclaringClass() != Object.class){
-				VbMethod[] vbMethods = method.getAnnotationsByType(VbMethod.class);
-				if(vbMethods.length > 0){
-					VbMethod vbMethod = vbMethods[0];
-					
-					if(StringUtils.isEmpty(vbMethod.value())){
-						String name = method.getName();
-						if((name.startsWith("get") || name.startsWith("set")) && name.length() > 3 && Character.isLowerCase(name.charAt(3)) == false){
-							JavaMethod m = new JavaMethod(lib, this, method, true, vbMethod.withIntepreter());
-							this.addMember(m);
-							name = m.name;
-						} else{
-							this.addMember(new JavaMethod(lib, this, method, vbMethod.withIntepreter()));
-						}
-						if(vbMethod.isDefault()){
-							this.setDefaultMember(name);
-						}
-						if(vbMethod.isDictionary()){
-							this.setDictionaryMember(name);
-						}
-						if(vbMethod.isIterator()){
-							this.setIteratorMember(name);
-						}
-					} else {
-						String decl = vbMethod.value();
-						String methodType = decl.substring(0, decl.indexOf(' ')); 
-						decl = decl + "\r\n" + "End " + methodType;
-						VbaLexer lexer = new VbaLexer(new org.antlr.v4.runtime.ANTLRInputStream(decl));
-						CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-						VbaParser parser = new VbaParser(tokenStream);
-						ParseTree element = parser.moduleBodyElement().getChild(0);
-						if(element instanceof FunctionStmtContext){
-							MethodDecl methodDecl = compiler.compileMethodBaseInfo((FunctionStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
-							this.addMember(m);
-						} else if(element instanceof SubStmtContext){
-							MethodDecl methodDecl = compiler.compileMethodBaseInfo((SubStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
-							this.addMember(m);
-						} else if (element instanceof PropertyGetStmtContext) {
-							MethodDecl methodDecl = compiler.compilePropertyGetBaseInfo((PropertyGetStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
-							this.addMember(m);
-						} else if (element instanceof PropertyLetStmtContext) {
-							MethodDecl methodDecl = compiler.compilePropertyLetBaseInfo((PropertyLetStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
-							this.addMember(m);
-						} else if (element instanceof PropertySetStmtContext) {
-							MethodDecl methodDecl = compiler.compilePropertySetBaseInfo((PropertySetStmtContext) element, this);
-							JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
-							this.addMember(m);
-						} else {
-							throw new UnsupportedOperationException("cannot be " + element);
-						}
-					}
-				}
-			}
+			processJavaMethod(lib, compiler, method);
 		}
 		
 		for(Field fld: this.javaClass.getFields()){
@@ -157,6 +100,68 @@ public class JavaClassModuleDecl extends ClassModuleDecl {
 							
 							this.addEvent((EventStmtContext) element, javaEventDecl);
 						}
+					} else {
+						throw new UnsupportedOperationException("cannot be " + element);
+					}
+				}
+			}
+		}
+	}
+
+	private void processJavaMethod(Library lib, Compiler compiler, Method method) {
+		int modifier = method.getModifiers();
+		if(Modifier.isStatic(modifier) == false && Modifier.isPublic(modifier) && method.getDeclaringClass() != Object.class){
+			VbMethod[] vbMethods = method.getAnnotationsByType(VbMethod.class);
+			if(vbMethods.length > 0){
+				VbMethod vbMethod = vbMethods[0];
+				
+				if(StringUtils.isEmpty(vbMethod.value())){
+					String name = method.getName();
+					if((name.startsWith("get") || name.startsWith("set")) && name.length() > 3 && Character.isLowerCase(name.charAt(3)) == false){
+						// System.out.println(method);
+						JavaMethod m = new JavaMethod(lib, this, method, true, vbMethod.withIntepreter());
+						this.addMember(m);
+						name = m.name;
+					} else{
+						this.addMember(new JavaMethod(lib, this, method, vbMethod.withIntepreter()));
+					}
+					if(vbMethod.isDefault()){
+						this.setDefaultMember(name);
+					}
+					if(vbMethod.isDictionary()){
+						this.setDictionaryMember(name);
+					}
+					if(vbMethod.isIterator()){
+						this.setIteratorMember(name);
+					}
+				} else {
+					String decl = vbMethod.value();
+					String methodType = decl.substring(0, decl.indexOf(' ')); 
+					decl = decl + "\r\n" + "End " + methodType;
+					VbaLexer lexer = new VbaLexer(new org.antlr.v4.runtime.ANTLRInputStream(decl));
+					CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+					VbaParser parser = new VbaParser(tokenStream);
+					ParseTree element = parser.moduleBodyElement().getChild(0);
+					if(element instanceof FunctionStmtContext){
+						MethodDecl methodDecl = compiler.compileMethodBaseInfo((FunctionStmtContext) element, this);
+						JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+						this.addMember(m);
+					} else if(element instanceof SubStmtContext){
+						MethodDecl methodDecl = compiler.compileMethodBaseInfo((SubStmtContext) element, this);
+						JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+						this.addMember(m);
+					} else if (element instanceof PropertyGetStmtContext) {
+						MethodDecl methodDecl = compiler.compilePropertyGetBaseInfo((PropertyGetStmtContext) element, this);
+						JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+						this.addMember(m);
+					} else if (element instanceof PropertyLetStmtContext) {
+						MethodDecl methodDecl = compiler.compilePropertyLetBaseInfo((PropertyLetStmtContext) element, this);
+						JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+						this.addMember(m);
+					} else if (element instanceof PropertySetStmtContext) {
+						MethodDecl methodDecl = compiler.compilePropertySetBaseInfo((PropertySetStmtContext) element, this);
+						JavaMethod m = new JavaMethod(lib, this, methodDecl, method, vbMethod.withIntepreter());
+						this.addMember(m);
 					} else {
 						throw new UnsupportedOperationException("cannot be " + element);
 					}

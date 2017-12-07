@@ -27,11 +27,14 @@ import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.NumberRange;
 import org.siphon.visualbasic.OverflowException;
 import org.siphon.visualbasic.SourceLocation;
+import org.siphon.visualbasic.VarDecl;
 import org.siphon.visualbasic.VbTypeDecl;
 import org.siphon.visualbasic.compile.ImpossibleException;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;
+import org.siphon.visualbasic.compile.JavaModuleDecl;
 
 import com.sun.glass.ui.Pixels.Format;
+import com.sun.org.apache.bcel.internal.classfile.JavaClass;
 
 public class VbValue {
 
@@ -483,16 +486,25 @@ public class VbValue {
 		} 
 	}
 	public static VbValue fromJava(Object obj) {
-		return fromJava(obj, true);
+		return fromJava(obj, true, null);
 	}
-
-	public static VbValue fromJava(Object obj, boolean autoCreateJavaModuleDecl) {
+	
+	public static VbValue fromJava(Object object, boolean autoCreateJavaModuleDecl) {
+		return fromJava(object, autoCreateJavaModuleDecl, null);
+	}
+	
+	public static VbValue fromJava(Object object, VbVarType suggest) {
+		return fromJava(object, false, suggest);
+	}
+	
+	public static VbValue fromJava(Object obj, boolean autoCreateJavaModuleDecl, VbVarType suggest) {
 		if (obj instanceof VbValue)
 			return (VbValue) obj;
 
 		if (obj == null) {
 			return null;
 		}
+		
 		if (obj instanceof Integer) {
 			return new VbValue(VbVarType.VbInteger, obj);
 		} else if (obj instanceof Long) {
@@ -513,7 +525,13 @@ public class VbValue {
 			return new VbValue(VbVarType.VbBoolean, (Boolean)obj ? -1 : 0);
 
 		} else {
-			if(autoCreateJavaModuleDecl){
+			if(suggest != null 
+					&& suggest.getClassModuleDecl() instanceof JavaClassModuleDecl 
+					&& ((JavaClassModuleDecl)suggest.getClassModuleDecl()).getJavaClass().isAssignableFrom(obj.getClass())){
+				JavaModuleInstance instance = new JavaModuleInstance(suggest.getClassModuleDecl(), obj);
+				VbValue val = new VbValue(suggest, instance);
+				return val;
+			} else if(autoCreateJavaModuleDecl){
 				JavaClassModuleDecl decl = new JavaClassModuleDecl(null, null, obj.getClass());
 				ClassTypeDecl ct = new ClassTypeDecl(null, decl);
 				VbVarType vt = new VbVarType(VbVarType.vbObject, ct, null, obj.getClass());
@@ -847,6 +865,10 @@ public class VbValue {
 			}
 		}
 		return this.varType.getSimilarity(type);
+	}
+
+	public ModuleInstance getInstance() {
+		return (ModuleInstance) this.value;
 	}
 	
 }

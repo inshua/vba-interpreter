@@ -59,6 +59,7 @@ import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVariable;
 import org.siphon.visualbasic.runtime.framework.Debug;
+import org.siphon.visualbasic.runtime.framework.stdole.StdOleLibrary;
 import org.siphon.visualbasic.runtime.framework.vb.VBLibrary;
 import org.siphon.visualbasic.runtime.framework.vba.VBALibrary;
 import org.siphon.visualbasic.runtime.statements.CalcStatements;
@@ -231,6 +232,9 @@ public class Compiler {
 	}
 
 	public Compiler() {
+		StdOleLibrary ole = new StdOleLibrary(this);
+		this.addLibraries(new Library[] {ole});
+		
 		this.vba = new VBALibrary(this);
 		this.vb = new VBLibrary(this);
 		this.addLibraries(new Library[] { vba, vb });

@@ -134,17 +134,20 @@ public class Interpreter {
 			try {
 				if (runtimeModule instanceof JavaModuleInstance) {
 					Object obj = ((JavaModuleInstance) runtimeModule).getInstance();
-					return VbValue.fromJava(javaMethod.javaMethod.invoke(obj,
-							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
+					Object result = javaMethod.javaMethod.invoke(obj,
+							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame()));
+					return VbValue.fromJava(result, method.returnType);
 				} else if(runtimeModule.getModuleDecl() instanceof FormModuleDecl) {
 					VbDecl decl = (VbDecl) runtimeModule.getMember("FORM");
 					VbVariable var = runtimeModule.variables.get(decl);
 					JavaModuleInstance inst = (JavaModuleInstance) var.value.value;
-					return VbValue.fromJava(javaMethod.javaMethod.invoke(inst.getInstance(),
-							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
+					Object result = javaMethod.javaMethod.invoke(inst.getInstance(),
+							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame()));
+					return VbValue.fromJava(result, method.returnType);
 				} else {
-					return VbValue.fromJava(javaMethod.javaMethod.invoke(null,
-							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame())));
+					Object result = javaMethod.javaMethod.invoke(null,
+							toJavaArguments(arguments, javaMethod, javaMethod.javaMethod.getParameterTypes(), this.getCurrentFrame()));
+					return VbValue.fromJava(result, method.returnType);
 				}
 			} catch (IllegalAccessException | IllegalArgumentException e) {
 				e.printStackTrace();
@@ -548,6 +551,7 @@ public class Interpreter {
 		// ModuleDecl formDecl = this.runtimeLibs.get("VB").getLibrary().modules.get("FORM");
 		ModuleDecl formDecl = thisForm.getModuleDecl();
 		applyAttributes(baseForm, attrs, formDecl);
+		applyComplexAttributes(baseForm, controlDef.getComplexAttributes(), formDecl);
 		
 		Form form = (Form) baseForm.getInstance();
 		
@@ -563,14 +567,15 @@ public class Interpreter {
 			control.load(form, this);
 			
 			applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
+			applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
 		}
 	}
 
-	private void applyAttributes(ModuleInstance formInstance, Map<String, VbValue> attrs, ModuleDecl formDecl)
+	private void applyAttributes(ModuleInstance controlInstance, Map<String, VbValue> attrs, ModuleDecl controlDecl)
 			throws VbRuntimeException, ArgumentException {
 		for(String attr : attrs.keySet()) {
 //			System.out.println("set " + attr + " to " + attrs.get(attr));
-			VbDecl member = formDecl.members.get(attr.toUpperCase());
+			VbDecl member = controlDecl.members.get(attr.toUpperCase());
 			if(member == null) continue;	// attr not impelement yet
 			
 			if(member instanceof PropertyDecl == false) {
@@ -581,7 +586,31 @@ public class Interpreter {
 			if(let == null) {
 				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
 			}
-			this.callMethod(formInstance, let, attrs.get(attr));
+			this.callMethod(controlInstance, let, attrs.get(attr));
+		}
+	}
+	
+	private void applyComplexAttributes(ModuleInstance controlInst, Map<String, ControlDef> attrs,
+			ModuleDecl controlDecl) throws VbRuntimeException, ArgumentException {
+		for(String attr : attrs.keySet()) {
+//			System.out.println("set " + attr + " to " + attrs.get(attr));
+			VbDecl member = controlDecl.members.get(attr.toUpperCase());
+			if(member == null) continue;	// attr not impelement yet
+			
+			if(member instanceof PropertyDecl == false) {
+				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+			} 
+			PropertyDecl pd = (PropertyDecl) member;
+			MethodDecl get = pd.get;
+			if(get == null) {
+				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+			}			
+			VbValue attrObject = this.callMethod(controlInst, get);
+			ModuleInstance attrInst = attrObject.getInstance();
+			
+			ControlDef assign = attrs.get(attr);
+			applyAttributes(attrInst, assign.getAttributes(), attrInst.getModuleDecl());
+			applyComplexAttributes(attrInst, assign.getComplexAttributes(), attrInst.getModuleDecl());
 		}
 	}
 
