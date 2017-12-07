@@ -13,16 +13,16 @@ import java.util.Map;
 import org.siphon.visualbasic.ArgumentException;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.runtime.CallFrame;
+import org.siphon.visualbasic.runtime.VbBindObject;
 import org.siphon.visualbasic.runtime.VbEventHandler;
 import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.framework.VbEvent;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 
-public class StdFont {
-
+public class StdFont extends VbBindObject{
+	
 	@VbEvent("Event FontChanged(PropertyName As String)")
 	public VbEventHandler fontChanged = null;
-	
 	
 	private List<PropertyChangeListener> onchanged = new ArrayList<>();
 	
@@ -36,7 +36,8 @@ public class StdFont {
 		for(PropertyChangeListener lstn : onchanged) {
 			lstn.propertyChange(new PropertyChangeEvent(this, property, oldValue, newValue));
 		}
-		if(fontChanged != null) fontChanged.handle(interpreter, callFrame, "Bold");
+		if(fontChanged != null) 
+			fontChanged.handle(interpreter, callFrame, property);
 	}
 
 	@VbMethod
@@ -152,11 +153,27 @@ public class StdFont {
 	
 	@VbMethod(withIntepreter=true)
 	public void setWeight(Interpreter interpreter, CallFrame callFrame, Integer weight) throws VbRuntimeException, ArgumentException {
+		// https://msdn.microsoft.com/en-us/library/aa445770(v=vs.60).aspx
+		if(weight > 400 && weight < 551) {
+			this.setWeight(interpreter, callFrame, 400);
+			return;
+		}
+		if(weight > 550 && weight != 700) {
+			this.setWeight(interpreter, callFrame, 700);
+			return;
+		}
+		
 		Boolean changed = weight != this.weight;		
 		if(changed) {
 			Integer old = this.weight;
 			this.weight = weight;
 			this.raiseChange(interpreter, callFrame, "Weight", old, weight);
+			
+			if(weight == 400) {
+				this.setBold(interpreter, callFrame, false);
+			} else if(weight == 700) {
+				this.setBold(interpreter, callFrame, true);
+			}			
 		}
 	}
 	private Integer charset = 0;
@@ -164,7 +181,7 @@ public class StdFont {
 	private Double size = 0.0;
 	private Boolean strikethrough = false;
 	private Boolean underline = false;
-	private Integer weight = 0;
+	private Integer weight = 400;
 	private Boolean italic = false;
 
 	public Font toJavaFont() {
@@ -173,14 +190,16 @@ public class StdFont {
 		if(this.italic) style |= Font.ITALIC;
 		
 		Map<TextAttribute, Object> fontAttributes = new HashMap<>();
+		// fontAttributes.put(TextAttribute.WEIGHT, this.weight);
 		if(this.underline) {
 			fontAttributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
 		}
 		if(this.strikethrough) {
 			fontAttributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 		}
-		int weight = (int) (this.weight / 1440.0 * 72);	// twip -> inch -> pt
-		return new Font(this.name, style, weight).deriveFont(fontAttributes);
+		// int weight = (int) (this.weight / 1440.0 * 72);	// twip -> inch -> pt
+		return new Font(this.name, style, this.size.intValue())
+				.deriveFont(fontAttributes);
 	}
 	
 	

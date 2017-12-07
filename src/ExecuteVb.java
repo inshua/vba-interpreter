@@ -1,3 +1,5 @@
+import java.nio.charset.Charset;
+
 import org.siphon.visualbasic.ArgumentException;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.Library;

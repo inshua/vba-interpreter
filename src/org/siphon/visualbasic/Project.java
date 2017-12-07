@@ -27,10 +27,12 @@ public class Project {
 	private String commandArgs;
 	private String name;
 	private Map<String, String> attributes = new HashMap<>();
+	private final String charset;
 	
-	public Project(String vbpPath) throws IOException, UnspportedActiveXReferenceException {
+	public Project(String vbpPath, String charset) throws IOException, UnspportedActiveXReferenceException {
+		this.charset = charset;
 		File prj = new File(vbpPath);
-		List<String> lines = FileUtils.readLines(prj);
+		List<String> lines = FileUtils.readLines(prj, charset);
 		for(String line : lines){
 			if(StringUtils.isNotBlank(line)){
 				String[] arr = line.split("=");
@@ -128,6 +130,10 @@ public class Project {
 
 	public Map<String, String> getAttributes() {
 		return attributes;
+	}
+
+	public String getCharset() {
+		return charset;
 	}
 
 }

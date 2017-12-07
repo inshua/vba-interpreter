@@ -505,6 +505,18 @@ public class VbValue {
 			return null;
 		}
 		
+		if(obj instanceof VbBindObject) {
+			JavaModuleInstance instance = ((VbBindObject) obj).getVbModuleInstance();
+			if(instance != null) {
+				if(suggest != null) {
+					VbValue val = new VbValue(suggest, instance);
+					return val;
+				} else {
+					return instance.asVbValue();
+				}
+			}
+		}
+		
 		if (obj instanceof Integer) {
 			return new VbValue(VbVarType.VbInteger, obj);
 		} else if (obj instanceof Long) {
@@ -528,6 +540,7 @@ public class VbValue {
 			if(suggest != null 
 					&& suggest.getClassModuleDecl() instanceof JavaClassModuleDecl 
 					&& ((JavaClassModuleDecl)suggest.getClassModuleDecl()).getJavaClass().isAssignableFrom(obj.getClass())){
+				
 				JavaModuleInstance instance = new JavaModuleInstance(suggest.getClassModuleDecl(), obj);
 				VbValue val = new VbValue(suggest, instance);
 				return val;

@@ -26,6 +26,10 @@ public class JavaModuleInstance extends ModuleInstance {
 			ClassModuleDecl cmdcl = (ClassModuleDecl) module;
 			mapJavaEvents(cmdcl);
 		}
+		
+		if(instance instanceof VbBindObject) {
+			((VbBindObject) instance).setVbModuleInstance(this);
+		}
 	}
 
 	private void mapJavaEvents(ClassModuleDecl cmdcl) {

@@ -3,6 +3,7 @@ package org.siphon.visualbasic;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -383,9 +384,9 @@ public class Interpreter {
 		return result;
 	}
 
-	public Library loadVbProject(String vbpPath)
+	public Library loadVbProject(String vbpPath, String charset)
 			throws IOException, UnspportedActiveXReferenceException, VbErrorsException, VbRuntimeException {
-		Project project = new Project(vbpPath);
+		Project project = new Project(vbpPath, charset);
 		return loadVbProject(project);
 	}
 
@@ -399,7 +400,7 @@ public class Interpreter {
 		for (File file : project.getModuleFiles()) {
 			files.add(file.getAbsolutePath());
 		}
-		Library lib = compiler.compile(project.getName(), (String[]) files.toArray(new String[files.size()]));
+		Library lib = compiler.compile(project.getName(), (String[]) files.toArray(new String[files.size()]), project.getCharset());
 
 		System.out.println("compiled code");
 		System.out.println(lib);
@@ -410,10 +411,10 @@ public class Interpreter {
 		return lib;
 	}
 
-	public void executeVbProject(String vbpPath) throws IOException, UnspportedActiveXReferenceException, VbErrorsException,
+	public void executeVbProject(String vbpPath, String charset) throws IOException, UnspportedActiveXReferenceException, VbErrorsException,
 			NotFoundException, VbRuntimeException, ArgumentException {
-		Project project = new Project(vbpPath);
-		Library lib = this.loadVbProject(vbpPath);
+		Project project = new Project(vbpPath, charset);
+		Library lib = this.loadVbProject(vbpPath, charset);
 		if (project.getType() == ProjectType.Exe) {
 			String s = project.getStartup();
 			if ("Sub Main".equalsIgnoreCase(s)) {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.input.CharSequenceInputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.siphon.visualbasic.ArgumentMode;
@@ -73,8 +75,6 @@ import org.siphon.visualbasic.runtime.statements.LogicalStatements;
 import org.siphon.visualbasic.runtime.statements.NamedArgumentStatement;
 import org.siphon.visualbasic.runtime.statements.NewStatement;
 import org.stringtemplate.v4.compiler.Bytecode.OperandType;
-
-import com.sun.org.apache.xalan.internal.xsltc.compiler.CompilerException;
 
 import jdk.nashorn.internal.ir.BlockStatement;
 import sun.java2d.pipe.SpanShapeRenderer.Simple;
@@ -270,6 +270,10 @@ public class Compiler {
 	}
 
 	public Library compile(String libName, String[] files) {
+		return compile(libName, files, Charset.defaultCharset().name());
+	}
+
+	public Library compile(String libName, String[] files, String charset) {
 		Library result = new Library(libName);
 
 		Map<String, ParseTree> moduleTrees = new HashMap<>();
@@ -278,7 +282,7 @@ public class Compiler {
 			File file = new File(s);
 			VbaLexer lexer;
 			try {
-				lexer = new VbaLexer(new org.antlr.v4.runtime.ANTLRInputStream(new FileInputStream(file)));
+				lexer = new VbaLexer(new org.antlr.v4.runtime.ANTLRFileStream(s, charset));
 
 				CommonTokenStream tokenStream = new CommonTokenStream(lexer);
 				VbaParser parser = new VbaParser(tokenStream);
@@ -2182,5 +2186,6 @@ public class Compiler {
 
 	public void mustBeVariable(VbDecl varDecl) {
 	}
+
 
 }
