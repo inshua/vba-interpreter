@@ -3,7 +3,7 @@ implement a  vba interpreter in java
 
 VBA 解析器、基于VBA语言的规则引擎
 
-![preview](/vba/FormTwoControls/2 controls.jpg?raw=true)]
+![preview](/vba/FormTwoControls/2 controls.jpg?raw=true)
 coding........
 
 ----
