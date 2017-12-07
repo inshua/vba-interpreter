@@ -561,6 +561,7 @@ public class Interpreter {
 			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
 			VbVariable var = thisForm.variables.get(controlDecl);
 			if(var.varType.isArray()) {
+				// 控件数组不是 Array
 				VbArray arr = (VbArray) var.varType.crateDefaultValue();
 				arr.setControlArray(true);
 				arr.set();
