@@ -33,13 +33,7 @@ public class LoadLibraryStatement extends Statement {
 				runtimeLib.modules.put(moduleDecl.upperCaseName(), instance);
 			} else if(moduleDecl.moduleType == ModuleType.Form) {
 				FormModuleDecl fmdcl = (FormModuleDecl) moduleDecl;
-				ModuleInstance instance = new ModuleInstance(moduleDecl);				
-				VbValue value = instance.asVbValue();
-				VbVariable var = fmdcl.getVarDecl().createVar();
-				var.setReadonly(true);
-				var.value = value;
-				instance.initializeClass(interpreter, frame);
-				runtimeLib.variables.put(fmdcl.getVarDecl(), var);
+				fmdcl.initVariables(interpreter, frame, runtimeLib);
 			}
 		}
 		return null;

@@ -361,13 +361,7 @@ public class Compiler {
 		for (ModuleDecl moduleDecl : result.modules.values()) {
 			if(moduleDecl instanceof FormModuleDecl) {
 				FormModuleDecl fmdcl = (FormModuleDecl) moduleDecl;
-				VarDecl varDecl = new VarDecl(result, null);
-				varDecl.varType = new VbVarType(VbVarType.vbObject, 
-						result.types.get(fmdcl.upperCaseName()), null, null);
-				varDecl.name = fmdcl.name;
-				varDecl.visibility = Visibility.PUBLIC;				
-				this.addDecl(moduleDecl, null, varDecl);
-				fmdcl.setVarDecl(varDecl);
+				fmdcl.initVarDecls();
 			}
 		}
 		
@@ -458,7 +452,6 @@ public class Compiler {
 				if("VB.FORM".equalsIgnoreCase(controlDef.getType().getProgId())) {
 					FormModuleDecl formModuleDecl = new FormModuleDecl(lib, this, controlDef);
 					moduleDecl = formModuleDecl;
-					moduleDecl.name = controlDef.getName();
 				} else {
 					moduleDecl.addCompileException(controlDeclAst, "unknown control " + controlDef.getType()); 
 				}
@@ -1178,7 +1171,7 @@ public class Compiler {
 		// TODO 类型已经存在
 	}
 
-	private void addDecl(ModuleDecl moduleDecl, MethodDecl methodDecl, VarDecl decl) {
+	public void addDecl(ModuleDecl moduleDecl, MethodDecl methodDecl, VarDecl decl) {
 		if (methodDecl == null) {
 			if (moduleDecl.addMember(decl))
 				this.names.addDecl(decl);

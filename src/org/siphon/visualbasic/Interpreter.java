@@ -14,6 +14,7 @@ import org.siphon.visualbasic.Project.ProjectType;
 import org.siphon.visualbasic.compile.CompileException;
 import org.siphon.visualbasic.compile.Compiler;
 import org.siphon.visualbasic.compile.ImpossibleException;
+import org.siphon.visualbasic.compile.JavaClassModuleDecl;
 import org.siphon.visualbasic.compile.JavaMethod;
 import org.siphon.visualbasic.compile.JavaModuleDecl;
 import org.siphon.visualbasic.compile.NamedArgument;
@@ -41,6 +42,7 @@ import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVariable;
 import org.siphon.visualbasic.runtime.framework.Debug;
+import org.siphon.visualbasic.runtime.framework.vb.Control;
 import org.siphon.visualbasic.runtime.framework.vb.Form;
 import org.siphon.visualbasic.runtime.framework.vba.Math;
 import org.siphon.visualbasic.runtime.framework.vba.VBALibrary;
@@ -416,13 +418,16 @@ public class Interpreter {
 				if (subMain == null)
 					throw new NotFoundException("Sub Main not found");
 				this.callMethod(subMain);
-			} else {
+			} else {	// 启动对象为窗体
 				FormModuleDecl formDecl = (FormModuleDecl) lib.modules.get(s.toUpperCase());
 				RuntimeLibrary runtimeLib = this.runtimeLibs.get(project.getName().toUpperCase());
 				VbVariable form = runtimeLib.variables.get(formDecl.getVarDecl());
 				MethodDecl subMain = new MethodDecl(lib, formDecl, MethodType.Sub);
+				subMain.module = formDecl;
 				subMain.statements.add(new ShowFormStatement(form));
-				this.callMethod(subMain);
+				
+				ModuleInstance instance = (ModuleInstance) form.value.value;
+				this.callMethod(instance, subMain);
 			}
 		}
 	}
@@ -544,18 +549,24 @@ public class Interpreter {
 		ModuleDecl formDecl = thisForm.getModuleDecl();
 		applyAttributes(baseForm, attrs, formDecl);
 		
+		Form form = (Form) baseForm.getInstance();
+		
 		for(ControlDef child : controlDef.getChildren()) {
 			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
 			VbVariable var = thisForm.variables.get(controlDecl);
+			var.setReadonly(false);
+			var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
+			var.assign(var.value, this, this.getCurrentFrame(), null);
+			var.setReadonly(true);
 			JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
-			MethodDecl load = (MethodDecl) controlDecl.varType.typeDecl.getMember("LOAD");
-			this.callMethod(controlInst, load, thisForm);
+			Control control = (Control) controlInst.getInstance();
+			control.load(form, this);
 			
 			applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
 		}
 	}
 
-	private void applyAttributes(JavaModuleInstance formInstance, Map<String, VbValue> attrs, ModuleDecl formDecl)
+	private void applyAttributes(ModuleInstance formInstance, Map<String, VbValue> attrs, ModuleDecl formDecl)
 			throws VbRuntimeException, ArgumentException {
 		for(String attr : attrs.keySet()) {
 //			System.out.println("set " + attr + " to " + attrs.get(attr));
@@ -579,7 +590,7 @@ public class Interpreter {
 		VbVariable var = instance.variables.get(formDecl.members.get("FORM"));
 		JavaModuleInstance jmi = (JavaModuleInstance) var.value.value;
 		Form form = (Form) jmi.getInstance();
-		if(!form.isLoaded()) {	// 当访问窗体的属性方法时自动加载窗体
+		if(!form.isLoaded()) { 	// 当访问窗体的属性方法时自动加载窗体
 			form.setInitForm(new Callback() {
 				@Override
 				public void run() throws VbRuntimeException, ArgumentException {

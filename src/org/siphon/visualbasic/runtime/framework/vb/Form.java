@@ -43,6 +43,7 @@ public class Form {
 		frame = new JFrame();
 
 		frame.pack();
+		frame.setLayout(null);
 		
 		this.initFormCallback.run();
 		

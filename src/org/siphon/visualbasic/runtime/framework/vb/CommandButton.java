@@ -15,7 +15,7 @@ import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.framework.VbEvent;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 
-public class CommandButton {
+public class CommandButton extends Control{
 
 	@VbEvent("Event Click()")
 	public VbEventHandler onclick = null;
@@ -33,7 +33,7 @@ public class CommandButton {
 			public void actionPerformed(ActionEvent e) {
 				if(onclick != null) {
 					try {
-						onclick.handle(interpreter, interpreter.getCurrentFrame());
+						onclick.handle(interpreter, null);
 					} catch (VbRuntimeException e1) {
 						e1.printStackTrace();
 					} catch (ArgumentException e1) {
