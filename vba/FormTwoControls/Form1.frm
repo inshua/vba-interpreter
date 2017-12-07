@@ -41,5 +41,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Command1_Click()
-    Me.Text1.Text = "Hello World"
+    Debug.Print Now
+    Me.Text1.Text = Now
 End Sub

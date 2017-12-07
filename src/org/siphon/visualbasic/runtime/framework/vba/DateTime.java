@@ -33,14 +33,14 @@ public class DateTime {
 		return VbValue.CStr(Date());
 	}
 	
-	@VbMethod("Function DateAdd(Interval As String, Number As Double, Date)")
-	public static VbValue DateAdd(String Interval, double Number, VbValue date){
-		return VbValue.Empty;
-	}
-	
-	@VbMethod("DateDiff(Interval As String, Date1, Date2, Optional FirstDayOfWeek As VbDayOfWeek = vbSunday], Optional FirstWeekOfYear As VbFirstWeekOfYear = vbFirstJan1)")
-	public static VbValue DateDiff(String Interval, VbValue date1, VbValue date2, int FirstDayOfWeek, int FirstWeekOfYear){
-		return VbValue.Empty;
-	}
+//	@VbMethod("Function DateAdd(Interval As String, Number As Double, Date)")
+//	public static VbValue DateAdd(String Interval, double Number, VbValue date){
+//		return VbValue.Empty;
+//	}
+//	
+//	@VbMethod("DateDiff(Interval As String, Date1, Date2, Optional FirstDayOfWeek As VbDayOfWeek = vbSunday], Optional FirstWeekOfYear As VbFirstWeekOfYear = vbFirstJan1)")
+//	public static VbValue DateDiff(String Interval, VbValue date1, VbValue date2, int FirstDayOfWeek, int FirstWeekOfYear){
+//		return VbValue.Empty;
+//	}
     
 }

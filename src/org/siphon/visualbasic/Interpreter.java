@@ -187,7 +187,7 @@ public class Interpreter {
 			if (paramType == VbValue.class) {
 				result[i + offset] = argCall;
 			} else {
-				result[i + offset] = VbValue.vbValueToJava(arguments[i]);
+				result[i + offset] = VbValue.vbValueToJava(argCall);
 			}
 		}		
 		return result;
