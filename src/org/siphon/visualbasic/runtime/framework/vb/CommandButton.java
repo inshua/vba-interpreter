@@ -21,11 +21,10 @@ public class CommandButton extends Control{
 	public VbEventHandler onclick = null;
 
 	JButton button;
-	private Form form;
-
+	
 	public void load(Form form, Interpreter interpreter) {
 		this.form = form;
-		button = new JButton();
+		this.component = button = new JButton();
 		form.frame.add(button);
 		button.addActionListener(new ActionListener() {
 			
@@ -44,46 +43,6 @@ public class CommandButton extends Control{
 		});
 	}
 
-	@VbMethod
-	public Integer getTop() {
-		return form.fromPixel(button.getY(), 1);
-	}
-
-	@VbMethod
-	public void setTop(Integer top) {
-		button.setLocation(button.getX(), form.toPixel(top, 1));
-	}
-
-	@VbMethod
-	public Integer getLeft() {
-		return form.fromPixel(button.getX(), 1);
-	}
-
-	@VbMethod
-	public void setLeft(Integer left) {
-		button.setLocation(form.toPixel(left, 1), button.getX());
-	}
-
-	@VbMethod
-	public Integer getWidth() {
-		return form.fromPixel(button.getWidth(), 1);
-	}
-
-	@VbMethod
-	public void setHeight(Integer height) {
-		button.setSize(button.getWidth(), form.toPixel(height, 1));
-	}
-
-	@VbMethod
-	public Integer getHeight() {
-		return form.fromPixel(button.getHeight(), 1);
-	}
-
-	@VbMethod
-	public void setWidth(Integer width) {
-		button.setSize(form.toPixel(width, 1), button.getHeight());
-	}
-	
 	@VbMethod
 	public String getCaption() throws VbRuntimeException, ArgumentException {
 		return button.getText();
