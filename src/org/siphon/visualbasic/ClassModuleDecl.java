@@ -8,7 +8,10 @@ import java.util.Map;
 import org.siphon.visualbasic.compile.CompileException;
 import org.siphon.visualbasic.compile.Compiler;
 import org.siphon.visualbasic.compile.ImplementorClassModuleDecl;
+import org.siphon.visualbasic.runtime.ModuleInstance;
+import org.siphon.visualbasic.runtime.Statement;
 import org.siphon.visualbasic.runtime.VbVarType;
+import org.siphon.visualbasic.runtime.framework.Enums.VbCallType;
 import org.siphon.visualbasic.runtime.statements.AssignStatement;
 import org.siphon.visualbasic.runtime.statements.EvalAssignableStatement;
 import org.siphon.visualbasic.runtime.statements.NewStatement;
@@ -87,6 +90,25 @@ public class ClassModuleDecl extends ModuleDecl {
 
 	public ModuleMemberDecl getDefaultMember() {
 		return this.defaultMember;
+	}
+	
+	public ModuleMemberDecl getDefaultMember(int callType) {
+		ModuleMemberDecl defaultMember = this.getDefaultMember();
+		if (defaultMember != null) {
+			if (callType == VbCallType.VbMethod && defaultMember instanceof MethodDecl) {
+				return defaultMember;
+			} else if (defaultMember instanceof PropertyDecl) {
+				PropertyDecl p = (PropertyDecl) defaultMember;
+				if (p.get != null && callType == VbCallType.VbGet) {
+					return p.get;
+				} else if(p.let != null && callType == VbCallType.VbLet) {
+					return p.let;
+				} else if(p.set != null && callType == VbCallType.VbSet) {
+					return p.set;
+				}
+			}
+		}
+		return null;
 	}
 
 	public void setIteratorMember(String memberName) {

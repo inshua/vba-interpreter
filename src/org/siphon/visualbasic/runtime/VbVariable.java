@@ -1,15 +1,21 @@
 package org.siphon.visualbasic.runtime;
 
+import java.util.List;
+
 import javax.management.RuntimeErrorException;
 
 import org.siphon.visualbasic.ArgumentMode;
 import org.siphon.visualbasic.ClassModuleDecl;
 import org.siphon.visualbasic.ClassTypeDecl;
 import org.siphon.visualbasic.Interpreter;
+import org.siphon.visualbasic.MethodDecl;
 import org.siphon.visualbasic.OverflowException;
+import org.siphon.visualbasic.PropertyDecl;
 import org.siphon.visualbasic.SourceLocation;
 import org.siphon.visualbasic.VarDecl;
+import org.siphon.visualbasic.VbDecl;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;
+import org.siphon.visualbasic.runtime.framework.Enums.VbCallType;
 
 public class VbVariable {
 
@@ -44,6 +50,15 @@ public class VbVariable {
 	}
 
 	public void assign(VbValue value, Interpreter interpreter, CallFrame frame, SourceLocation sourceLocation) throws VbRuntimeException {
+		if(this.varType.vbType == VbVarType.vbObject && value != null && !value.isObject()) {
+			VbDecl defaultMember = this.varType.getDefaultMember(VbCallType.VbLet);
+			if(defaultMember != null) {
+				MethodDecl let = (MethodDecl) defaultMember;
+				interpreter.callMethod((ModuleInstance) this.value.value, (List<Statement>) null, let, value);
+				return;
+			}
+		}
+		
 		if(this.isReadonly()){
 			throw new VbRuntimeException(VbRuntimeException.对象不支持此动作, sourceLocation);
 		}

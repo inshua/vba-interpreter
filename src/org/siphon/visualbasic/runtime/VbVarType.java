@@ -329,6 +329,15 @@ public class VbVarType {
 		}
 		return null;
 	}
+	
+	public VbDecl getDefaultMember(int vbCallType) {
+		if (this.vbType == VbVarType.vbObject) {
+			ClassTypeDecl td = (ClassTypeDecl) typeDecl;
+			return td.classModule.getDefaultMember(vbCallType);
+		}
+		return null;
+	}
+
 
 	public boolean maybeObject() {
 		return this.vbType == VbVarType.vbObject || this.vbType == VbVarType.vbVariant;

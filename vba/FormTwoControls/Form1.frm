@@ -42,5 +42,5 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Command1_Click()
     Debug.Print Now
-    Me.Text1.Text = Now
+    Me.Text1 = Now
 End Sub
