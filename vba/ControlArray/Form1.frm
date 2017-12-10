@@ -51,10 +51,10 @@ Private Sub Command1_Click(Index As Integer)
     Debug.Print btn.Tag
     Debug.Print btn.Name
 End Sub
-'
-'Private Sub Form_Load()
-''    For Each cmd In Me.Command1
-''        Debug.Print cmd.Caption
-''    Next
-''    Print Command1(22)
-'End Sub
+
+Private Sub Form_Load()
+    For Each cmd In Me.Command1
+        Debug.Print cmd.Caption
+    Next
+'    Print Command1(22)
+End Sub

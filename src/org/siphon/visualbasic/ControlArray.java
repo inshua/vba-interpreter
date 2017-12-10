@@ -17,6 +17,7 @@ import org.siphon.visualbasic.runtime.framework.vb.Control;
 public class ControlArray {
 
 	private List<JavaModuleInstance> elements = new ArrayList<>();
+	private List<VbValue> vbValues = new ArrayList<>();
 	
 	
 	@VbMethod
@@ -57,10 +58,11 @@ public class ControlArray {
 	
 	@VbMethod(isIterator=true)
 	public Object iterator(){
-		return elements.iterator();
+		return vbValues.iterator();
 	}
 
 	public void add(JavaModuleInstance controlInst) {
 		this.elements.add(controlInst);
+		this.vbValues.add(controlInst.asVbValue());
 	}
 }

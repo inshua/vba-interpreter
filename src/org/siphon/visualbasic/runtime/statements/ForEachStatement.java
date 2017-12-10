@@ -49,59 +49,62 @@ public class ForEachStatement extends Statement {
 
 	public Statement initStatement(SourceLocation sourceLocation) {
 		return new Statement(sourceLocation) {
-			
+
 			@Override
 			public VbValue eval(Interpreter interpreter, CallFrame frame) throws VbRuntimeException {
 				VbValue col = collection.eval(interpreter, frame);
-				if(col.varType.vbType == VbVarType.vbVariant){
+				if (col.varType.vbType == VbVarType.vbVariant) {
 					col = (VbValue) col.value;
 				}
-				if(col.varType.vbType == VbVarType.vbArray){
+				if (col.varType.vbType == VbVarType.vbArray) {
 					VbArray arr = (VbArray) col;
 					iterator = arr.iterator();
-				} else if(col.varType.isJavaObject()){
-					if(col.value.getClass().isArray()){
-						iterator  = new JavaArrayIterator(col.value);
-					} else if(col.value instanceof Iterable){
-						iterator = new VbValueIterator(((Iterable)col.value).iterator());
-					} else if(col.value instanceof Enumeration){
-						iterator = new VbValueIterator(new EnumerationIterator((Enumeration)col.value));
-					} else if(col.value instanceof Map){
+				} else if (col.varType.isJavaObject()) {
+					if (col.value.getClass().isArray()) {
+						iterator = new JavaArrayIterator(col.value);
+					} else if (col.value instanceof Iterable) {
+						iterator = new VbValueIterator(((Iterable) col.value).iterator());
+					} else if (col.value instanceof Enumeration) {
+						iterator = new VbValueIterator(new EnumerationIterator((Enumeration) col.value));
+					} else if (col.value instanceof Map) {
 						Map map = (Map) col.value;
 						iterator = new VbValueIterator(map.values().iterator());
-					} else {
-						throw new VbRuntimeException(VbRuntimeException.类型不匹配, sourceLocation);
 					}
-				} else if(col.isObject()){
+				}
+				if (iterator == null && col.isObject()) {
 					ClassModuleDecl c = col.varType.getClassModuleDecl();
-					ModuleMemberDecl it = (c!= null ? c.getIteratorMember() : null);
-					if(it == null){
+					ModuleMemberDecl it = (c != null ? c.getIteratorMember() : null);
+					if (it == null) {
 						throw new VbRuntimeException(VbRuntimeException.类型不匹配, sourceLocation);
 					}
 					MethodDecl itMethod = null;
-					if(it instanceof PropertyDecl){
-						PropertyDecl p = (PropertyDecl)it;
-						if(p.get == null || p.get.arguments.size() > 0){
+					if (it instanceof PropertyDecl) {
+						PropertyDecl p = (PropertyDecl) it;
+						if (p.get == null || p.get.arguments.size() > 0) {
 							throw new VbRuntimeException(VbRuntimeException.无效的过程调用, sourceLocation);
 						}
 						itMethod = p.get;
-					} else if(it instanceof MethodDecl){
+					} else if (it instanceof MethodDecl) {
 						itMethod = (MethodDecl) it;
-						if(itMethod.arguments.size() > 0){
+						if (itMethod.arguments.size() > 0) {
 							throw new VbRuntimeException(VbRuntimeException.无效的过程调用, sourceLocation);
 						}
 					}
 
 					try {
-						VbValue itr = interpreter.callMethod((ModuleInstance)col.value, itMethod);
-						if(itr != null){
-							JavaModuleInstance inst = (JavaModuleInstance) itr.value;
-							Object obj = inst.getInstance();
-							if(obj instanceof Iterator){
-								iterator = (Iterator) obj;
+						VbValue itr = interpreter.callMethod((ModuleInstance) col.value, itMethod);
+						if (itr != null) {
+							if (itr.value instanceof JavaModuleInstance) {
+								JavaModuleInstance inst = (JavaModuleInstance) itr.value;
+								Object obj = inst.getInstance();
+								if (obj instanceof Iterator) {
+									iterator = (Iterator) obj;
+								}
+							} else if (itr.value instanceof Iterator) {
+								iterator = (Iterator<VbValue>) itr.value;
 							}
 						}
-						if(iterator == null){
+						if (iterator == null) {
 							throw new VbRuntimeException(VbRuntimeException.类型不匹配, sourceLocation);
 						}
 					} catch (ArgumentException e) {
@@ -110,7 +113,7 @@ public class ForEachStatement extends Statement {
 				}
 				return null;
 			}
-			
+
 			@Override
 			public String toString() {
 				return "For Each Iterator At " + varDecl;
@@ -120,14 +123,14 @@ public class ForEachStatement extends Statement {
 
 	public Statement advanceNext(SourceLocation sourceLocation) {
 		return new Statement(sourceLocation) {
-			
+
 			@Override
 			public VbValue eval(Interpreter interpreter, CallFrame frame) throws VbRuntimeException {
 				VbVariable variable = frame.locateVbVariable(varDecl);
 				variable.assign(iterator.next(), interpreter, frame, sourceLocation);
 				return null;
 			}
-			
+
 			@Override
 			public String toString() {
 				return "ForEach.Next";
@@ -137,12 +140,12 @@ public class ForEachStatement extends Statement {
 
 	public Statement hasNext(SourceLocation sourceLocation) {
 		return new Statement(sourceLocation) {
-			
+
 			@Override
 			public VbValue eval(Interpreter interpreter, CallFrame frame) throws VbRuntimeException {
 				return VbValue.fromJava(iterator.hasNext());
 			}
-			
+
 			@Override
 			public String toString() {
 				return "ForEach.hasNext";
