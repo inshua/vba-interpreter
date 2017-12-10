@@ -15,7 +15,7 @@ public class InitLibraryStatement extends Statement {
 	private Library lib;
 
 	public InitLibraryStatement(Library lib) {
-		super(null);
+		super(SourceLocation.Unkown);
 		this.lib = lib;
 	}
 

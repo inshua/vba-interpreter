@@ -35,9 +35,11 @@ public class TextBox extends Control {
 		return this.font;
 	}
 	
-	public void load(Form form, Interpreter interpreter) {
+	@Override
+	public void load(Form form, String name, Interpreter interpreter) {
 		this.form = form;
 		this.component = textComponent = new JTextField();
+		this.name = name;
 		form.frame.add(textComponent);
 	}
 

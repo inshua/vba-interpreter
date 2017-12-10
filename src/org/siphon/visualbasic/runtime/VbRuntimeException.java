@@ -116,6 +116,8 @@ public class VbRuntimeException extends Exception {
 	public final static int 未找到ActiveX部件=337;
 
 	public final static int ActiveX部件不能正确运行=338;
+	
+	public final static int 控件数组元素不存在=340;
 
 	public final static int 对象已经加载=360;
 

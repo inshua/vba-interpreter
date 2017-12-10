@@ -18,11 +18,13 @@ import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.VbVarType;
 import org.siphon.visualbasic.runtime.VbVariable;
+import org.siphon.visualbasic.runtime.framework.Enums.VbCallType;
 import org.siphon.visualbasic.runtime.framework.vb.Form;
 import org.siphon.visualbasic.runtime.statements.AssignStatement;
 import org.siphon.visualbasic.runtime.statements.EvalAssignableStatement;
 import org.siphon.visualbasic.runtime.statements.NewStatement;
 
+import sun.security.validator.ValidatorException;
 import vba.VbaParser.EventStmtContext;
 import vba.VbaParser.ImplementsStmtContext;
 
@@ -57,20 +59,32 @@ public class FormModuleDecl extends ClassModuleDecl {
 			VbVarType type = child.getType();			
 			if(child.getAttributes().containsKey("Index")) {
 				if(this.members.containsKey(child.getName().toUpperCase()) == false) {
-					int maxIndex = findMaxControlArrayIndex(child.getName());
-					type = type.toArrayType(new ArrayDef.Rank[] {new ArrayDef.Rank(0, maxIndex)});
-				} else {
-					continue;
+					// 定义控件数组类型
+					Library lib = new Library("UNKNOWN");
+					JavaClassModuleDecl mdl = new JavaClassModuleDecl(lib, this.compiler, ControlArray.class);
+					ModuleMemberDecl itemMethod = mdl.getDefaultMember();
+					MethodDecl itemMethodUtral = (MethodDecl)itemMethod;
+					itemMethodUtral.returnType = type;
+					lib.addModule(mdl);
+					
+					VarDecl controlDecl = new VarDecl(this.library, this);
+					controlDecl.varType = new VbVarType(VbVarType.vbObject, lib.types.get("CONTROLARRAY"), null, null);
+					controlDecl.name = child.getName();
+					controlDecl.visibility = Visibility.PRIVATE;
+					controlDecl.withNew = true;
+					this.addMember(controlDecl);
+					this.controlDecls.add(controlDecl);
 				}
-			} 
-			VarDecl controlDecl = new VarDecl(this.library, this);
-			controlDecl.visibility = Visibility.PRIVATE;
-			controlDecl.varType = type;
-			controlDecl.name = child.getName();
-			controlDecl.withEvents = true;
-			if(!type.isArray()) controlDecl.withNew = true;
-			this.addMember(controlDecl);
-			this.controlDecls.add(controlDecl);
+			} else{
+				VarDecl controlDecl = new VarDecl(this.library, this);
+				controlDecl.visibility = Visibility.PRIVATE;
+				controlDecl.varType = type;
+				controlDecl.name = child.getName();
+				controlDecl.withEvents = true;
+				controlDecl.withNew = true;
+				this.addMember(controlDecl);
+				this.controlDecls.add(controlDecl);
+			}
 		}
 	}
 	

@@ -22,8 +22,10 @@ public class CommandButton extends Control{
 
 	JButton button;
 	
-	public void load(Form form, Interpreter interpreter) {
+	@Override
+	public void load(Form form, String name, Interpreter interpreter) {
 		this.form = form;
+		this.name = name;
 		this.component = button = new JButton();
 		form.frame.add(button);
 		button.addActionListener(new ActionListener() {

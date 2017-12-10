@@ -1,6 +1,6 @@
 package org.siphon.visualbasic.runtime;
 
-public class VbBindObject {
+public class VbBoundObject {
 	private JavaModuleInstance vbModuleInstance;
 
 	public JavaModuleInstance getVbModuleInstance() {

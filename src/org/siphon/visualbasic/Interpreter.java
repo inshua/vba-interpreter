@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.siphon.visualbasic.Project.ProjectType;
 import org.siphon.visualbasic.compile.CompileException;
 import org.siphon.visualbasic.compile.Compiler;
@@ -301,7 +302,8 @@ public class Interpreter {
 		for (int i = callFrames.size() - 1; i >= 0; i--) {
 			CallFrame frame = callFrames.get(i);
 			Statement statement = frame.getCurrentStatement();
-			StackTraceElement e = new StackTraceElement(frame.module.getModuleDecl().name, frame.method.name,
+			StackTraceElement e = new StackTraceElement(frame.module.getModuleDecl().name, 
+					StringUtils.defaultIfEmpty(frame.method.name, "<UNKOWN METHOD>"),
 					frame.module.getModuleDecl().getSrcFile().getName(), statement.getSourceLocation().getLine());
 			result.add(e);
 		}
@@ -560,19 +562,37 @@ public class Interpreter {
 		for(ControlDef child : controlDef.getChildren()) {
 			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
 			VbVariable var = thisForm.variables.get(controlDecl);
-			if(var.varType.isArray()) {
-				// 控件数组不是 Array
-				VbArray arr = (VbArray) var.varType.crateDefaultValue();
-				arr.setControlArray(true);
-				arr.set();
-			} else {
-				var.setReadonly(false);
+			if(var.varType.isJavaObject() && var.varType.getWrappedJavaClass() == ControlArray.class) {
+				// TODO Load 控件数组
+				VbVariable controlArrayVar = var;
+				controlArrayVar.value.ensureInstanceInited(this, this.getCurrentFrame(), SourceLocation.ByInterpreter);
+				ControlArray arr = (ControlArray) controlArrayVar.value.toJava();
+				VarDecl elementDecl = new VarDecl(formDecl.library, formDecl);
+				elementDecl.varType = ((MethodDecl)var.varType.getDefaultMember()).returnType;
+				elementDecl.withEvents = true;
+				elementDecl.withNew = true;
+				var = elementDecl.createVar();
+				var.varDecl.name = controlArrayVar.varDecl.name;
 				var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
 				var.assign(var.value, this, this.getCurrentFrame(), null);	// 使触发 bind event handlers
 				var.setReadonly(true);
 				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
+				
+				arr.add(controlInst);
+				
 				Control control = (Control) controlInst.getInstance();
-				control.load(form, this);
+				control.load(form, var.varDecl.name, this);
+				
+				applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
+				applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
+			} else {
+				var.setReadonly(false);
+				var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
+				var.assign(var.value, this, this.getCurrentFrame(), SourceLocation.ByInterpreter);	// 使触发 bind event handlers
+				var.setReadonly(true);
+				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
+				Control control = (Control) controlInst.getInstance();
+				control.load(form, var.varDecl.name, this);
 				
 				applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
 				applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());

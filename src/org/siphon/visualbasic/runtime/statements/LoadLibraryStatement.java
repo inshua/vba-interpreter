@@ -5,6 +5,7 @@ import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.Library;
 import org.siphon.visualbasic.ModuleDecl;
 import org.siphon.visualbasic.ModuleType;
+import org.siphon.visualbasic.SourceLocation;
 import org.siphon.visualbasic.runtime.CallFrame;
 import org.siphon.visualbasic.runtime.ModuleInstance;
 import org.siphon.visualbasic.runtime.RuntimeLibrary;
@@ -18,7 +19,7 @@ public class LoadLibraryStatement extends Statement {
 	private Library lib;
 
 	public LoadLibraryStatement(Library lib) {
-		super(null);
+		super(SourceLocation.Unkown);
 		this.lib = lib;
 	}
 

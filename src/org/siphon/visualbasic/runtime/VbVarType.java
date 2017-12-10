@@ -473,6 +473,12 @@ public class VbVarType {
 			return false;
 		}
 	}
+	
+	public Class getWrappedJavaClass(){
+		ClassTypeDecl decl = this.getClassTypeDecl();
+		if(decl == null) return null;
+		return ((JavaClassModuleDecl)decl.classModule).getJavaClass();
+	}
 
 	public String getProgId() {
 		String n = this.getTypeName();

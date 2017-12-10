@@ -13,13 +13,13 @@ import java.util.Map;
 import org.siphon.visualbasic.ArgumentException;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.runtime.CallFrame;
-import org.siphon.visualbasic.runtime.VbBindObject;
+import org.siphon.visualbasic.runtime.VbBoundObject;
 import org.siphon.visualbasic.runtime.VbEventHandler;
 import org.siphon.visualbasic.runtime.VbRuntimeException;
 import org.siphon.visualbasic.runtime.framework.VbEvent;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 
-public class StdFont extends VbBindObject{
+public class StdFont extends VbBoundObject{
 	
 	@VbEvent("Event FontChanged(PropertyName As String)")
 	public VbEventHandler fontChanged = null;

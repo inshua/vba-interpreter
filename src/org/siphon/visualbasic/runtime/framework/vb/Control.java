@@ -3,16 +3,20 @@ package org.siphon.visualbasic.runtime.framework.vb;
 import javax.swing.JComponent;
 
 import org.siphon.visualbasic.Interpreter;
-import org.siphon.visualbasic.runtime.VbBindObject;
+import org.siphon.visualbasic.runtime.VbBoundObject;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 
-public class Control extends VbBindObject {
+public class Control extends VbBoundObject {
 
 	protected JComponent component;
+	
+	protected String name = "";
 	
 	protected Form form;
 	
 	protected Integer index = null;		// 控件数组索引  
+	
+	protected String tag = "";
 	
 	@VbMethod
 	public Integer getIndex() {
@@ -24,7 +28,7 @@ public class Control extends VbBindObject {
 		this.index = index;
 	}
 
-	public void load(Form form, Interpreter interpreter) {
+	public void load(Form form, String name, Interpreter interpreter) {
 		
 	}
 	
@@ -67,5 +71,26 @@ public class Control extends VbBindObject {
 	public void setWidth(Integer width) {
 		component.setSize(form.toPixel(width, 1), component.getHeight());
 	}
+
+	@VbMethod
+	public String getTag() {
+		return tag;
+	}
+
+	@VbMethod
+	public void setTag(String tag) {
+		this.tag = tag;
+	}
+
+	@VbMethod
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	
 	
 }

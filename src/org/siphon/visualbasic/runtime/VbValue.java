@@ -505,8 +505,8 @@ public class VbValue {
 			return null;
 		}
 		
-		if(obj instanceof VbBindObject) {
-			JavaModuleInstance instance = ((VbBindObject) obj).getVbModuleInstance();
+		if(obj instanceof VbBoundObject) {
+			JavaModuleInstance instance = ((VbBoundObject) obj).getVbModuleInstance();
 			if(instance != null) {
 				if(suggest != null) {
 					VbValue val = new VbValue(suggest, instance);
@@ -601,9 +601,9 @@ public class VbValue {
 				return null;
 			} 
 			if(this.varType.typeDecl == ClassTypeDecl.JAVA_OBJECT_TYPE){
-				return this.value;
+				return ((JavaModuleInstance)this.value).getInstance();
 			} else if(this.varType.getClassTypeDecl().classModule instanceof JavaClassModuleDecl){
-				return this.value;
+				return ((JavaModuleInstance)this.value).getInstance();
 			} else {
 				return this;
 			}

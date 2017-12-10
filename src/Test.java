@@ -76,7 +76,9 @@ public class Test {
 		//new Interpreter().executeVbProject("vba\\Random\\Test.vbp");
 		
 		// new Interpreter().executeVbProject("vba\\FormFromSubMain\\Test.vbp");
-		new Interpreter().executeVbProject("vba\\FormTwoControls\\Test.vbp", "gbk");
+		// new Interpreter().executeVbProject("vba\\FormTwoControls\\Test.vbp", "gbk");
+		
+		new Interpreter().executeVbProject("vba\\ControlArray\\Test.vbp", "gbk");
 	}
 
 }

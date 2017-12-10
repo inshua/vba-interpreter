@@ -12,9 +12,20 @@ Begin VB.Form Form1
    Begin VB.CommandButton Command1 
       Caption         =   "µã»÷"
       Height          =   615
+      Index           =   5
+      Left            =   3840
+      TabIndex        =   2
+      Tag             =   "5"
+      Top             =   2040
+      Width           =   1215
+   End
+   Begin VB.CommandButton Command1 
+      Caption         =   "µã»÷"
+      Height          =   615
       Index           =   1
       Left            =   2400
       TabIndex        =   1
+      Tag             =   "CHN"
       Top             =   1080
       Width           =   1215
    End
@@ -24,6 +35,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   600
       TabIndex        =   0
+      Tag             =   "En"
       Top             =   1080
       Width           =   1215
    End
@@ -34,5 +46,15 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Command1_Click(Index As Integer)
-    Debug.Print Me.Command1(Index).Name
+    Dim btn As CommandButton
+    Set btn = Me.Command1(Index)
+    Debug.Print btn.Tag
+    Debug.Print btn.Name
 End Sub
+'
+'Private Sub Form_Load()
+''    For Each cmd In Me.Command1
+''        Debug.Print cmd.Caption
+''    Next
+''    Print Command1(22)
+'End Sub

@@ -1,5 +1,6 @@
 package org.siphon.visualbasic.runtime.framework.vb;
 
+import org.siphon.visualbasic.ControlArray;
 import org.siphon.visualbasic.Library;
 import org.siphon.visualbasic.compile.Compiler;
 import org.siphon.visualbasic.compile.JavaClassModuleDecl;

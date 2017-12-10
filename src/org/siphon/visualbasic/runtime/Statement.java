@@ -21,6 +21,8 @@ public abstract class Statement {
 	public abstract VbValue eval(Interpreter interpreter, CallFrame frame) throws VbRuntimeException;
 	
 	public Statement(SourceLocation sourceLocation){
+		if(sourceLocation == null) 
+			System.out.println("is ");
 		this.sourceLocation = sourceLocation;
 	}
 }

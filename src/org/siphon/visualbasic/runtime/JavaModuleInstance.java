@@ -28,8 +28,8 @@ public class JavaModuleInstance extends ModuleInstance {
 			mapJavaEvents(cmdcl);
 		}
 		
-		if(instance instanceof VbBindObject) {
-			((VbBindObject) instance).setVbModuleInstance(this);
+		if(instance instanceof VbBoundObject) {
+			((VbBoundObject) instance).setVbModuleInstance(this);
 		}
 	}
 

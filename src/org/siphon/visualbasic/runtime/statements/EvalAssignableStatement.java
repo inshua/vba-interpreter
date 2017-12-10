@@ -549,7 +549,8 @@ public class EvalAssignableStatement extends Statement {
 						continue; // optional
 					arr[i] = args.get(i).eval(interpreter, frame);
 				}
-				return interpreter.callMethod(moduleInstance, args, method, arr);
+				VbValue r = interpreter.callMethod(moduleInstance, args, method, arr);
+				return r;
 			} else {
 				return interpreter.callMethod(moduleInstance, args, method);
 			}
@@ -826,7 +827,6 @@ public class EvalAssignableStatement extends Statement {
 						} else {
 							base = new MethodCaller(instance, method, currSourceLocation);
 						}
-						next = processToNext(it, next);
 
 					} else if (member instanceof VbVariable) {
 						base = new VariableEA((VbVariable) member, currSourceLocation);

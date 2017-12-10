@@ -7,7 +7,11 @@ import org.antlr.v4.runtime.Token;
 
 public class SourceLocation {
 	
+	private static final File UnknownFile = new File("<UNKNOWN>");
+	
 	public static final SourceLocation ByInterpreter = new SourceLocation();
+
+	public static final SourceLocation Unkown = new SourceLocation(UnknownFile, 0, 0, 0);
 
 	public File getSourceFile() {
 		return sourceFile;

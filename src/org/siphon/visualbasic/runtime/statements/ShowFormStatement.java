@@ -19,7 +19,7 @@ public class ShowFormStatement extends Statement {
 	private VbVariable form;
 
 	public ShowFormStatement(VbVariable form) {
-		super(null);
+		super(SourceLocation.Unkown);
 		this.form = form;
 	}
 
