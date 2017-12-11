@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.siphon.visualbasic.Project.ProjectType;
 import org.siphon.visualbasic.compile.CompileException;
@@ -548,20 +549,15 @@ public class Interpreter {
 		return callFrames.peek();
 	}
 
-	// TODO 部分属性应考虑使用 batch 方式一次性提交，有些属性是有连带效应的，如 ScaleMode 等
-	public void initControl(ModuleInstance thisForm, JavaModuleInstance baseForm, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
-		Map<String, VbValue> attrs = controlDef.getAttributes();
+	public void initControl(ModuleInstance thisForm, JavaModuleInstance baseForm, Control container, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
 
-		// ModuleDecl formDecl = this.runtimeLibs.get("VB").getLibrary().modules.get("FORM");
 		ModuleDecl formDecl = thisForm.getModuleDecl();
-		applyAttributes(baseForm, attrs, formDecl);
-		applyComplexAttributes(baseForm, controlDef.getComplexAttributes(), formDecl);
-		
 		Form form = (Form) baseForm.getInstance();
 		
 		for(ControlDef child : controlDef.getChildren()) {
 			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
 			VbVariable var = thisForm.variables.get(controlDecl);
+			Control control = null;
 			if(var.varType.isJavaObject() && var.varType.getWrappedJavaClass() == ControlArray.class) {
 				// TODO Load 控件数组
 				VbVariable controlArrayVar = var;
@@ -578,68 +574,23 @@ public class Interpreter {
 				var.setReadonly(true);
 				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
 				
-				arr.add(controlInst);
+				arr.add(var.value);
 				
-				Control control = (Control) controlInst.getInstance();
-				control.load(form, var.varDecl.name, this);
-				
-				applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
-				applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
+				control = (Control) controlInst.getInstance();
+				control.load(form, var.varDecl.name, child, container, this);
 			} else {
 				var.setReadonly(false);
 				var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
 				var.assign(var.value, this, this.getCurrentFrame(), SourceLocation.ByInterpreter);	// 使触发 bind event handlers
 				var.setReadonly(true);
 				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
-				Control control = (Control) controlInst.getInstance();
-				control.load(form, var.varDecl.name, this);
-				
-				applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
-				applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
+				control = (Control) controlInst.getInstance();
+				control.load(form, var.varDecl.name, child, container, this);
 			}
-		}
-	}
-
-	private void applyAttributes(ModuleInstance controlInstance, Map<String, VbValue> attrs, ModuleDecl controlDecl)
-			throws VbRuntimeException, ArgumentException {
-		for(String attr : attrs.keySet()) {
-//			System.out.println("set " + attr + " to " + attrs.get(attr));
-			VbDecl member = controlDecl.members.get(attr.toUpperCase());
-			if(member == null) continue;	// attr not impelement yet
-			
-			if(member instanceof PropertyDecl == false) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
-			} 
-			PropertyDecl pd = (PropertyDecl) member;
-			MethodDecl let = pd.let;
-			if(let == null) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+			// 递归孙子节点
+			if(child.getChildren() != null) {
+				initControl(thisForm, baseForm, control, child);
 			}
-			this.callMethod(controlInstance, let, attrs.get(attr));
-		}
-	}
-	
-	private void applyComplexAttributes(ModuleInstance controlInst, Map<String, ControlDef> attrs,
-			ModuleDecl controlDecl) throws VbRuntimeException, ArgumentException {
-		for(String attr : attrs.keySet()) {
-//			System.out.println("set " + attr + " to " + attrs.get(attr));
-			VbDecl member = controlDecl.members.get(attr.toUpperCase());
-			if(member == null) continue;	// attr not impelement yet
-			
-			if(member instanceof PropertyDecl == false) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
-			} 
-			PropertyDecl pd = (PropertyDecl) member;
-			MethodDecl get = pd.get;
-			if(get == null) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
-			}			
-			VbValue attrObject = this.callMethod(controlInst, get);
-			ModuleInstance attrInst = attrObject.getInstance();
-			
-			ControlDef assign = attrs.get(attr);
-			applyAttributes(attrInst, assign.getAttributes(), attrInst.getModuleDecl());
-			applyComplexAttributes(attrInst, assign.getComplexAttributes(), attrInst.getModuleDecl());
 		}
 	}
 
@@ -652,10 +603,10 @@ public class Interpreter {
 			form.setInitForm(new Callback() {
 				@Override
 				public void run() throws VbRuntimeException, ArgumentException {
-					Interpreter.this.initControl((ModuleInstance) instance, jmi, formDecl.getControlDef());
+					Interpreter.this.initControl((ModuleInstance) instance, jmi, form, formDecl.getControlDef());
 				}
 			});
-			form.load(this, this.getCurrentFrame());
+			form.load(null, formDecl.name, formDecl.getControlDef(), null, this);
 		}
 	}
 

@@ -1,15 +1,19 @@
 package org.siphon.visualbasic.runtime.framework.vb;
 
+import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Map;
 
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 
 import org.siphon.visualbasic.ArgumentException;
+import org.siphon.visualbasic.ControlDef;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.runtime.ModuleInstance;
 import org.siphon.visualbasic.runtime.VbRuntimeException;
+import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 import org.siphon.visualbasic.runtime.framework.stdole.StdFont;
 
@@ -17,30 +21,12 @@ public class TextBox extends Control {
 
 	JTextComponent textComponent;
 	
-	private StdFont font = new StdFont();
-	
-	public TextBox() {
-		font.addOnchangeEventListener(new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				if(textComponent != null) {
-					textComponent.setFont(font.toJavaFont());
-				}
-			}
-		});
-	}
-	
-	@VbMethod("Property Get Font() As StdFont")
-	public StdFont getFont() {
-		return this.font;
-	}
-	
 	@Override
-	public void load(Form form, String name, Interpreter interpreter) {
-		this.form = form;
-		this.component = textComponent = new JTextField();
-		this.name = name;
-		form.frame.add(textComponent);
+	public void load(Form form, String name, ControlDef controlDef, Control container, Interpreter interpreter) throws VbRuntimeException, ArgumentException {
+		super.load(form, name, controlDef, container, interpreter);
+		
+		Map<String, VbValue> attrs = controlDef.getAttributes();
+		this.setText((String) attrs.get("Caption").toJava());
 	}
 
 	@VbMethod(isDefault=true)
@@ -51,6 +37,11 @@ public class TextBox extends Control {
 	@VbMethod(isDefault=true)
 	public void setText(String text) throws VbRuntimeException, ArgumentException {
 		textComponent.setText(text);
+	}
+
+	@Override
+	protected Component createComponent() {
+		return this.textComponent = new JTextField();
 	}
 
 }

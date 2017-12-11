@@ -16,6 +16,7 @@ public class VBLibrary extends Library{
 		
 		this.addModule(new JavaClassModuleDecl(this, compiler, CommandButton.class));
 		this.addModule(new JavaClassModuleDecl(this, compiler, TextBox.class));
+		this.addModule(new JavaClassModuleDecl(this, compiler, Frame.class));
 	}
 	
 

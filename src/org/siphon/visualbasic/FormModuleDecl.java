@@ -55,7 +55,12 @@ public class FormModuleDecl extends ClassModuleDecl {
 		this.varDecl = varDecl;
 
 		// 初始化成员
-		for(ControlDef child : controlDef.getChildren()) {			
+		Stack<ControlDef> stack = new Stack<ControlDef>();
+		for(ControlDef child : controlDef.getChildren()) {
+			stack.push(child);
+		}
+		while(stack.isEmpty() == false) {
+			ControlDef child = stack.pop();
 			VbVarType type = child.getType();			
 			if(child.getAttributes().containsKey("Index")) {
 				if(this.members.containsKey(child.getName().toUpperCase()) == false) {
@@ -84,6 +89,10 @@ public class FormModuleDecl extends ClassModuleDecl {
 				controlDecl.withNew = true;
 				this.addMember(controlDecl);
 				this.controlDecls.add(controlDecl);
+			}
+			
+			for(ControlDef little : child.getChildren()) {
+				stack.push(little);
 			}
 		}
 	}

@@ -1,17 +1,21 @@
 package org.siphon.visualbasic.runtime.framework.vb;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 
 import org.siphon.visualbasic.ArgumentException;
+import org.siphon.visualbasic.ControlDef;
 import org.siphon.visualbasic.Interpreter;
 import org.siphon.visualbasic.runtime.ModuleInstance;
 import org.siphon.visualbasic.runtime.VbEventHandler;
 import org.siphon.visualbasic.runtime.VbRuntimeException;
+import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.framework.VbEvent;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 
@@ -23,11 +27,12 @@ public class CommandButton extends Control{
 	JButton button;
 	
 	@Override
-	public void load(Form form, String name, Interpreter interpreter) {
-		this.form = form;
-		this.name = name;
-		this.component = button = new JButton();
-		form.frame.add(button);
+	public void load(Form form, String name, ControlDef controlDef, Control container, Interpreter interpreter) throws VbRuntimeException, ArgumentException {
+		super.load(form, name, controlDef, container, interpreter);
+		
+		Map<String, VbValue> attrs = controlDef.getAttributes();
+		this.setCaption((String) attrs.get("Caption").toJava());
+		
 		button.addActionListener(new ActionListener() {
 			
 			@Override
@@ -53,6 +58,11 @@ public class CommandButton extends Control{
 	@VbMethod
 	public void setCaption(String caption) throws VbRuntimeException, ArgumentException {
 		button.setText(caption);
+	}
+
+	@Override
+	protected Component createComponent() {
+		return button = new JButton();
 	}
 
 }

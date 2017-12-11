@@ -23,62 +23,64 @@ public class Test {
 		// DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
 		// System.out.println( LocalDate.parse("22:33:00", formatter));
 
-		// new Interpreter().executeVbProject("vba\\Prj1\\Prj1.vbp");
+		// new Interpreter().executeVbProject("vba/Prj1/Prj1.vbp");
 
-		// new Interpreter().executeVbProject("vba\\ErrHandle\\ErrHandle.vbp");
+		// new Interpreter().executeVbProject("vba/ErrHandle/ErrHandle.vbp");
 
-		// new Interpreter().executeVbProject("vba\\ClassTest\\ClassTest.vbp");
+		// new Interpreter().executeVbProject("vba/ClassTest/ClassTest.vbp");
 
-		// new Interpreter().executeVbProject("vba\\EventTest\\EventTest.vbp");
+		// new Interpreter().executeVbProject("vba/EventTest/EventTest.vbp");
 
-		// new Interpreter().executeVbProject("vba\\EventTest\\EventTest.vbp");
+		// new Interpreter().executeVbProject("vba/EventTest/EventTest.vbp");
 
-		//new Interpreter().executeVbProject("vba\\CallTest\\CallTest.vbp");
+		//new Interpreter().executeVbProject("vba/CallTest/CallTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\AddTest\\AddTest.vbp");
+		// new Interpreter().executeVbProject("vba/AddTest/AddTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\SubtractTest\\SubtractTest.vbp");
+		// new Interpreter().executeVbProject("vba/SubtractTest/SubtractTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\MultiTest\\MultiTest.vbp");
+		// new Interpreter().executeVbProject("vba/MultiTest/MultiTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\DivTest\\DivTest.vbp");
+		// new Interpreter().executeVbProject("vba/DivTest/DivTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\CurrencyTest\\CurrencyTest.vbp");
+		// new Interpreter().executeVbProject("vba/CurrencyTest/CurrencyTest.vbp");
 		
-		//new Interpreter().executeVbProject("vba\\IDivMod\\IDivModTest.vbp");
+		//new Interpreter().executeVbProject("vba/IDivMod/IDivModTest.vbp");
 		
-//		new Interpreter().executeVbProject("vba\\PosNegTest\\PosNegTest.vbp");
+//		new Interpreter().executeVbProject("vba/PosNegTest/PosNegTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\LogicOp\\LogicOp.vbp");
+		// new Interpreter().executeVbProject("vba/LogicOp/LogicOp.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\CompareTest\\CompareTest.vbp");
+		// new Interpreter().executeVbProject("vba/CompareTest/CompareTest.vbp");
 		
-//		new Interpreter().executeVbProject("vba\\MissingTest\\MissingTest.vbp");
+//		new Interpreter().executeVbProject("vba/MissingTest/MissingTest.vbp");
 		
-		//new Interpreter().executeVbProject("vba\\CollectionTest\\CollectionTest.vbp");
+		//new Interpreter().executeVbProject("vba/CollectionTest/CollectionTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\RuleTest\\RuleTest.vbp");
+		// new Interpreter().executeVbProject("vba/RuleTest/RuleTest.vbp");
 		
-//		new Interpreter().executeVbProject("vba\\RedimTest\\RedimTest.vbp");
+//		new Interpreter().executeVbProject("vba/RedimTest/RedimTest.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\LikeTest\\LikeTest.vbp");
+		// new Interpreter().executeVbProject("vba/LikeTest/LikeTest.vbp");
 		
-		//new Interpreter().executeVbProject("vba\\ConstByRef\\Test.vbp");
+		//new Interpreter().executeVbProject("vba/ConstByRef/Test.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\Implements\\Test.vbp");
+		// new Interpreter().executeVbProject("vba/Implements/Test.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\Mid\\Test.vbp");
+		// new Interpreter().executeVbProject("vba/Mid/Test.vbp");
 		
-		//new Interpreter().executeVbProject("vba\\CreateObject\\Test.vbp");
+		//new Interpreter().executeVbProject("vba/CreateObject/Test.vbp");
 		
-		//new Interpreter().executeVbProject("vba\\Interactive\\Test.vbp");
+		//new Interpreter().executeVbProject("vba/Interactive/Test.vbp");
 		
-		//new Interpreter().executeVbProject("vba\\Random\\Test.vbp");
+		//new Interpreter().executeVbProject("vba/Random/Test.vbp");
 		
-		// new Interpreter().executeVbProject("vba\\FormFromSubMain\\Test.vbp");
-		// new Interpreter().executeVbProject("vba\\FormTwoControls\\Test.vbp", "gbk");
+		// new Interpreter().executeVbProject("vba/FormFromSubMain/Test.vbp");
+		// new Interpreter().executeVbProject("vba/FormTwoControls/Test.vbp", "gbk");
 		
-		new Interpreter().executeVbProject("vba\\ControlArray\\Test.vbp", "gbk");
+		// new Interpreter().executeVbProject("vba/ControlArray/Test.vbp", "gbk");
+		
+		new Interpreter().executeVbProject("vba/Frame/Test.vbp", "gbk");
 	}
 
 }
