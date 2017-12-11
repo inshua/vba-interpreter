@@ -443,9 +443,21 @@ public class ValueStatementCompiler {
 			thrumb.add(first);
 			
 		} else {
-			base = compiler.findDeclInScope(first, method, false);
-			if(base != null) {
-				baseLoacation = method.module.sourceLocation(first);
+			try {
+				base = compiler.findMemberDeclInScope(first, method, false);
+				if(base != null) {
+					baseLoacation = method.module.sourceLocation(first);
+				}
+			} catch (CompileException compileException) {
+				if(!asAssignee && !inWithStatement) {
+					try {
+						VbValue value = compiler.findConstValue(implicitCallStmt.getText(), method.module, method);
+						return new ValueStatementDesc().setStatement(new LiteralStatement(value))
+									.setVarType(value.varType).setAst(implicitCallStmt);
+					} catch (AmbiguousIdentifierException | NotMatchException | NotFoundException e) {
+						throw compileException;
+					}
+				}
 			}
 		} 
 		if(base == null){ // macth pattern in names

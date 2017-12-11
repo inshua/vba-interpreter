@@ -36,12 +36,12 @@ public class ExecuteVb {
 		// String filename = "vba/gosub.bas";
 		// String filename = "vba/if-then-else.bas";
 		// String filename = "vba/select-case.bas";
-		String filename = "vba/func-call.bas";
+		// String filename = "vba/func-call.bas";
 		// String filename = "vba/base-type.bas";
 		// String filename = "vba/array-dim.bas";
 		// String filename = "vba/for-next.bas";
 		// String filename = "vba/do-while.bas";
-		// String filename = "vba/const-enum.bas";
+		String filename = "vba/const-enum.bas";
 		// String filename = "vba/udt.bas";
 		
 		Compiler compiler = new Compiler();

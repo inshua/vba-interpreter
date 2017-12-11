@@ -177,9 +177,6 @@ public class NameIndex {
 		return (VarDecl)this.findAccessibleMemberDecl(varName, module, library, includeConst, VarDecl.class);
 	}
 	public ModuleMemberDecl findAccessibleMemberDecl(String varName, ModuleDecl module, Library library, boolean includeConst, Class<? extends ModuleMemberDecl> declType) throws AmbiguousIdentifierException, NotMatchException, NotFoundException {
-		if(varName.equals("SQR")){
-			System.out.println();
-		}
 		ModuleMemberDecl result = null;
 		ModuleMemberDecl sameModuleResult= null;
 		ModuleMemberDecl sameLibResult = null;

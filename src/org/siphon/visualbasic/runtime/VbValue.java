@@ -168,7 +168,14 @@ public class VbValue {
 				if(value.varType.vbType == VbVarType.vbCurrency){
 					return new VbValue(VbVarType.VbString, currencyToDouble((Long)value.value));
 				} else {
-					return new VbValue(VbVarType.VbString, value.value.toString());
+					Number n = (Number) value.value;
+					String s;
+					if(n.longValue() == n.doubleValue()) {
+						s = String.valueOf(n.longValue());
+					} else {
+						s = String.valueOf(n);
+					}
+					return new VbValue(VbVarType.VbString, s);
 				}
 			}
 			throw new ClassCastException("cannot cast to string");

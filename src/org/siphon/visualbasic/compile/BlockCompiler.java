@@ -418,7 +418,7 @@ public class BlockCompiler {
 	}
 
 	private void compileMidStmt(MidStmtContext ast) throws CompileException {
-		VbDecl varDecl = compiler.findDeclInScope(ast.ambiguousIdentifier(), method, false);
+		VbDecl varDecl = compiler.findMemberDeclInScope(ast.ambiguousIdentifier(), method, false);
 		compiler.mustBeVariable(varDecl);
 		compiler.mustBeStringType(varDecl);
 		
@@ -445,7 +445,7 @@ public class BlockCompiler {
 	private void compileRedimStmt(RedimStmtContext ast) throws CompileException {
 		boolean preserve = ast.PRESERVE() != null;
 		for(RedimSubStmtContext sub : ast.redimSubStmt()){
-			VbDecl decl = compiler.findDeclInScope(sub.ambiguousIdentifier(), method, false);
+			VbDecl decl = compiler.findMemberDeclInScope(sub.ambiguousIdentifier(), method, false);
 			compiler.mustBeArrayType(decl);
 			VarDecl varDecl = (VarDecl) decl;
 			if(varDecl.varType.vbType != VbVarType.vbVariant && varDecl.varType.vbType != VbVarType.vbArray){
@@ -824,7 +824,7 @@ public class BlockCompiler {
 
 		VarDecl var;
 		AmbiguousIdentifierContext iterName = forNext.ambiguousIdentifier(0);
-		var = (VarDecl) compiler.findDeclInScope(iterName, method, false);
+		var = (VarDecl) compiler.findMemberDeclInScope(iterName, method, false);
 		compiler.mustBeNumberType(var.varType);
 		ForNextStatement forStatement = new ForNextStatement(var, initValue.getStatement(), step.getStatement(),
 				endValue.getStatement());
@@ -862,7 +862,7 @@ public class BlockCompiler {
 
 		VarDecl var;
 		AmbiguousIdentifierContext iterName = forEach.ambiguousIdentifier(0);
-		var = (VarDecl) compiler.findDeclInScope(iterName, method, false);
+		var = (VarDecl) compiler.findMemberDeclInScope(iterName, method, false);
 
 		ValueStatementDesc collection = compiler.compileValueStatement(forEach.valueStmt(), method);
 		compiler.mustBeArrayOrCollection(collection);
@@ -959,9 +959,11 @@ public class BlockCompiler {
 				selectCaseStatement.defaultStatementIndex = result.size();
 			}
 
-			for (BlockStmtContext st : kase.block().blockStmt()) {
-				ParserRuleContext c = (ParserRuleContext) st.getChild(0);
-				compileStmt(c, forExits, doWhileExits);
+			if(kase.block() != null) {
+				for (BlockStmtContext st : kase.block().blockStmt()) {
+					ParserRuleContext c = (ParserRuleContext) st.getChild(0);
+					compileStmt(c, forExits, doWhileExits);
+				}
 			}
 
 			index++;

@@ -26,7 +26,46 @@ public class TextBox extends Control {
 		super.load(form, name, controlDef, container, interpreter);
 		
 		Map<String, VbValue> attrs = controlDef.getAttributes();
-		this.setText((String) attrs.get("Caption").toJava());
+		this.setText((String) attrs.get("Text").toJava());
+		
+		if(attrs.containsKey("Alignment")) {
+			this.setAlignment(((Number)attrs.get("Alignment").toJava()).intValue());
+		}
+		
+	}
+
+	@VbMethod
+	private void setAlignment(Integer alignment) {
+		if(textComponent instanceof JTextField) {
+			JTextField tf = ((JTextField) textComponent);
+			switch(alignment) {
+			case 0:
+				tf.setHorizontalAlignment(JTextField.LEFT);
+				break;
+			case 1:
+				tf.setHorizontalAlignment(JTextField.RIGHT);
+				break;
+			case 2:
+				tf.setHorizontalAlignment(JTextField.CENTER);
+				break;
+			}
+		}
+	}
+	
+	@VbMethod
+	private Integer getAlignment() {
+		if(textComponent instanceof JTextField) {
+			JTextField tf = ((JTextField) textComponent);
+			switch(tf.getHorizontalAlignment()) {
+			case JTextField.LEFT:
+				return 0;
+			case JTextField.RIGHT:
+				return 1;
+			case JTextField.CENTER:
+				return 2;
+			}
+		}
+		return 0;
 	}
 
 	@VbMethod(isDefault=true)

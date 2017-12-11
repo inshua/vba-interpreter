@@ -248,7 +248,13 @@ public class Interpreter {
 				}
 
 				try {
-					statement.eval(this, frame);
+					try { 
+						statement.eval(this, frame);
+					} catch(VbRuntimeException e) {
+						throw e;
+					} catch(Exception e) {
+						throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法, e);
+					}
 				} catch (VbRuntimeException e) {
 					SourceLocation s = e.getSourceLocation();
 					if (s == SourceLocation.ByInterpreter || s == null) {
@@ -258,7 +264,7 @@ public class Interpreter {
 						e.setVbStackTrace(toStackTrace(callFrames));
 					frame.error.wrap(e, frame, s);
 					frame.error.setHandled(false);
-				}
+				} 
 
 				if (frame.error.hasError()) {
 					if (frame.errorHandler != null) {

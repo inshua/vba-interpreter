@@ -41,7 +41,7 @@ public class VBALibrary extends Library {
 		this.addType(EnumDecl.fromJava(this, Enums.VbTriState.class));
 		
 //		this.addModule(new JavaModuleDecl(this, compiler, Constants.class));
-//		this.addModule(new JavaModuleDecl(this, compiler, Conversion.class));
+		this.addModule(new JavaModuleDecl(this, compiler, Conversion.class));
 //		this.addModule(new JavaModuleDecl(this, compiler, Math.class));
 		this.addModule(new JavaModuleDecl(this, compiler, DateTime.class));
 //		this.addModule(new JavaModuleDecl(this, compiler, Strings.class));

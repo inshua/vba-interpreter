@@ -80,7 +80,9 @@ public class Test {
 		
 		// new Interpreter().executeVbProject("vba/ControlArray/Test.vbp", "gbk");
 		
-		new Interpreter().executeVbProject("vba/Frame/Test.vbp", "gbk");
+		// new Interpreter().executeVbProject("vba/Frame/Test.vbp", "gbk");
+		
+		new Interpreter().executeVbProject("vba/Calculator/Calc.vbp", "gbk");
 	}
 
 }

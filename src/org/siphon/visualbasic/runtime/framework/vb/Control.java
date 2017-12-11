@@ -111,6 +111,8 @@ public abstract class Control extends VbBoundObject {
 		font.setUnderline(interpreter, interpreter.getCurrentFrame(), !underline.equals(0));
 		font.setItalic(interpreter, interpreter.getCurrentFrame(), !italic.equals(0));
 		font.setStrikethrough(interpreter, interpreter.getCurrentFrame(), !strikethrough.equals(0));
+		
+		if(this.component != null) this.component.setFont(font.toJavaFont());
 	}
 
 	

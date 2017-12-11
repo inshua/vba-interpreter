@@ -22,7 +22,7 @@ public abstract class Statement {
 	
 	public Statement(SourceLocation sourceLocation){
 		if(sourceLocation == null) 
-			System.out.println("is ");
+			System.err.println("sourceLocation is null");
 		this.sourceLocation = sourceLocation;
 	}
 }

@@ -11,7 +11,7 @@ public class LiteralStatement extends Statement {
 	private final VbValue literal;
 
 	public LiteralStatement(VbValue literal) {
-		super(null);
+		super(SourceLocation.ByInterpreter);
 		assert literal != null;
 		this.literal = literal;
 	}
