@@ -1,3 +1,24 @@
+/*******************************************************************************
+ * Copyright (C) 2017 Inshua<inshua@gmail.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
 package org.siphon.visualbasic.runtime;
 
 import java.util.ArrayList;
@@ -20,6 +41,13 @@ public class VbArray extends VbValue {
 
 	private List<VbValue> values;
 	
+	private boolean controlArray;		// 是否为控件数组
+	// TODO 控件数组应单独实现为一种数据类型
+	
+	public boolean isControlArray() {
+		return controlArray;
+	}
+
 	public List<VbValue> toList(){
 		return Collections.unmodifiableList(values);
 	}
@@ -140,5 +168,9 @@ public class VbArray extends VbValue {
 				new ArrayDef.Rank[] { new ArrayDef.Rank(lBound, uBound) });
 		VbVarType arrType = new VbVarType(VbVarType.vbArray, null, paramArrayDef, null);
 		return new VbArray(arrType);
+	}
+
+	public void setControlArray(boolean controlArray) {
+		this.controlArray = controlArray;
 	}
 }

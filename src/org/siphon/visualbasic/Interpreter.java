@@ -1,3 +1,24 @@
+/*******************************************************************************
+ * Copyright (C) 2017 Inshua<inshua@gmail.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
 package org.siphon.visualbasic;
 
 import java.io.File;
@@ -6,11 +27,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.siphon.visualbasic.Project.ProjectType;
 import org.siphon.visualbasic.compile.CompileException;
 import org.siphon.visualbasic.compile.Compiler;
@@ -245,7 +269,13 @@ public class Interpreter {
 				}
 
 				try {
-					statement.eval(this, frame);
+					try { 
+						statement.eval(this, frame);
+					} catch(VbRuntimeException e) {
+						throw e;
+					} catch(Exception e) {
+						throw new VbRuntimeException(VbRuntimeException.对象不支持此属性或方法, e);
+					}
 				} catch (VbRuntimeException e) {
 					SourceLocation s = e.getSourceLocation();
 					if (s == SourceLocation.ByInterpreter || s == null) {
@@ -255,7 +285,7 @@ public class Interpreter {
 						e.setVbStackTrace(toStackTrace(callFrames));
 					frame.error.wrap(e, frame, s);
 					frame.error.setHandled(false);
-				}
+				} 
 
 				if (frame.error.hasError()) {
 					if (frame.errorHandler != null) {
@@ -300,7 +330,8 @@ public class Interpreter {
 		for (int i = callFrames.size() - 1; i >= 0; i--) {
 			CallFrame frame = callFrames.get(i);
 			Statement statement = frame.getCurrentStatement();
-			StackTraceElement e = new StackTraceElement(frame.module.getModuleDecl().name, frame.method.name,
+			StackTraceElement e = new StackTraceElement(frame.module.getModuleDecl().name, 
+					StringUtils.defaultIfEmpty(frame.method.name, "<UNKOWN METHOD>"),
 					frame.module.getModuleDecl().getSrcFile().getName(), statement.getSourceLocation().getLine());
 			result.add(e);
 		}
@@ -545,73 +576,48 @@ public class Interpreter {
 		return callFrames.peek();
 	}
 
-	// TODO 部分属性应考虑使用 batch 方式一次性提交，有些属性是有连带效应的，如 ScaleMode 等
-	public void initControl(ModuleInstance thisForm, JavaModuleInstance baseForm, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
-		Map<String, VbValue> attrs = controlDef.getAttributes();
+	public void initControl(ModuleInstance thisForm, JavaModuleInstance baseForm, Control container, ControlDef controlDef) throws VbRuntimeException, ArgumentException {
 
-		// ModuleDecl formDecl = this.runtimeLibs.get("VB").getLibrary().modules.get("FORM");
 		ModuleDecl formDecl = thisForm.getModuleDecl();
-		applyAttributes(baseForm, attrs, formDecl);
-		applyComplexAttributes(baseForm, controlDef.getComplexAttributes(), formDecl);
-		
 		Form form = (Form) baseForm.getInstance();
 		
 		for(ControlDef child : controlDef.getChildren()) {
 			VarDecl controlDecl = (VarDecl) formDecl.members.get(child.getName().toUpperCase());
 			VbVariable var = thisForm.variables.get(controlDecl);
-			var.setReadonly(false);
-			var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
-			var.assign(var.value, this, this.getCurrentFrame(), null);
-			var.setReadonly(true);
-			JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
-			Control control = (Control) controlInst.getInstance();
-			control.load(form, this);
-			
-			applyAttributes(controlInst, child.getAttributes(), controlInst.getModuleDecl());
-			applyComplexAttributes(controlInst, child.getComplexAttributes(), controlInst.getModuleDecl());
-		}
-	}
-
-	private void applyAttributes(ModuleInstance controlInstance, Map<String, VbValue> attrs, ModuleDecl controlDecl)
-			throws VbRuntimeException, ArgumentException {
-		for(String attr : attrs.keySet()) {
-//			System.out.println("set " + attr + " to " + attrs.get(attr));
-			VbDecl member = controlDecl.members.get(attr.toUpperCase());
-			if(member == null) continue;	// attr not impelement yet
-			
-			if(member instanceof PropertyDecl == false) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
-			} 
-			PropertyDecl pd = (PropertyDecl) member;
-			MethodDecl let = pd.let;
-			if(let == null) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
+			Control control = null;
+			if(var.varType.isJavaObject() && var.varType.getWrappedJavaClass() == ControlArray.class) {
+				// TODO Load 控件数组
+				VbVariable controlArrayVar = var;
+				controlArrayVar.value.ensureInstanceInited(this, this.getCurrentFrame(), SourceLocation.ByInterpreter);
+				ControlArray arr = (ControlArray) controlArrayVar.value.toJava();
+				VarDecl elementDecl = new VarDecl(formDecl.library, formDecl);
+				elementDecl.varType = ((MethodDecl)var.varType.getDefaultMember()).returnType;
+				elementDecl.withEvents = true;
+				elementDecl.withNew = true;
+				var = elementDecl.createVar();
+				var.varDecl.name = controlArrayVar.varDecl.name;
+				var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
+				var.assign(var.value, this, this.getCurrentFrame(), null);	// 使触发 bind event handlers
+				var.setReadonly(true);
+				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
+				
+				arr.add(var.value);
+				
+				control = (Control) controlInst.getInstance();
+				control.load(form, var.varDecl.name, child, container, this);
+			} else {
+				var.setReadonly(false);
+				var.value.ensureInstanceInited(this, this.getCurrentFrame(), null);
+				var.assign(var.value, this, this.getCurrentFrame(), SourceLocation.ByInterpreter);	// 使触发 bind event handlers
+				var.setReadonly(true);
+				JavaModuleInstance controlInst = (JavaModuleInstance) var.value.value;
+				control = (Control) controlInst.getInstance();
+				control.load(form, var.varDecl.name, child, container, this);
 			}
-			this.callMethod(controlInstance, let, attrs.get(attr));
-		}
-	}
-	
-	private void applyComplexAttributes(ModuleInstance controlInst, Map<String, ControlDef> attrs,
-			ModuleDecl controlDecl) throws VbRuntimeException, ArgumentException {
-		for(String attr : attrs.keySet()) {
-//			System.out.println("set " + attr + " to " + attrs.get(attr));
-			VbDecl member = controlDecl.members.get(attr.toUpperCase());
-			if(member == null) continue;	// attr not impelement yet
-			
-			if(member instanceof PropertyDecl == false) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
-			} 
-			PropertyDecl pd = (PropertyDecl) member;
-			MethodDecl get = pd.get;
-			if(get == null) {
-				throw new VbRuntimeException(VbRuntimeException.无效的过程调用);
-			}			
-			VbValue attrObject = this.callMethod(controlInst, get);
-			ModuleInstance attrInst = attrObject.getInstance();
-			
-			ControlDef assign = attrs.get(attr);
-			applyAttributes(attrInst, assign.getAttributes(), attrInst.getModuleDecl());
-			applyComplexAttributes(attrInst, assign.getComplexAttributes(), attrInst.getModuleDecl());
+			// 递归孙子节点
+			if(child.getChildren() != null) {
+				initControl(thisForm, baseForm, control, child);
+			}
 		}
 	}
 
@@ -624,10 +630,10 @@ public class Interpreter {
 			form.setInitForm(new Callback() {
 				@Override
 				public void run() throws VbRuntimeException, ArgumentException {
-					Interpreter.this.initControl((ModuleInstance) instance, jmi, formDecl.getControlDef());
+					Interpreter.this.initControl((ModuleInstance) instance, jmi, form, formDecl.getControlDef());
 				}
 			});
-			form.load(this, this.getCurrentFrame());
+			form.load(null, formDecl.name, formDecl.getControlDef(), null, this);
 		}
 	}
 

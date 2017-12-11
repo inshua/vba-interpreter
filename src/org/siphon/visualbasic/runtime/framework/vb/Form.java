@@ -1,12 +1,37 @@
+/*******************************************************************************
+ * Copyright (C) 2017 Inshua<inshua@gmail.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
 package org.siphon.visualbasic.runtime.framework.vb;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.awt.Point;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import org.siphon.visualbasic.ArgumentException;
 import org.siphon.visualbasic.Callback;
@@ -20,7 +45,7 @@ import org.siphon.visualbasic.runtime.framework.VbEvent;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
 
 // 类似 TheClass
-public class Form {
+public class Form extends Control {
 	
 	@VbEvent("Event Load()")
 	public VbEventHandler onload = null;
@@ -37,21 +62,46 @@ public class Form {
 	
 	private Integer startUpPosition = 0; // Manual
 	
-	public boolean isLoaded() {return this.frame != null; }
+	@Override
+	public void load(Form form, String name, ControlDef controlDef, Control container, Interpreter interpreter) throws VbRuntimeException, ArgumentException {
+		super.load(null, name, controlDef, container, interpreter);
+		
+		Map<String, VbValue> attrs = controlDef.getAttributes();
+		this.setCaption((String) attrs.get("Caption").toJava());
+		this.setStartUpPosition(((Number)attrs.get("StartUpPosition").toJava()).intValue());
+		
+		this.setWidth(((Number)attrs.get("ClientWidth").toJava()).intValue());
+		this.setHeight(((Number)attrs.get("ClientHeight").toJava()).intValue());
+		this.setTop(((Number)attrs.get("ClientTop").toJava()).intValue());
+		this.setLeft(((Number)attrs.get("ClientLeft").toJava()).intValue());
+		
+		if(attrs.containsKey("ScaleMode")) 
+			this.setScaleMode(((Number)attrs.get("ScaleMode").toJava()).intValue());
+		
+		if(attrs.containsKey("ScaleHeight"))
+			this.setScaleHeight(((Number)attrs.get("ScaleHeight").toJava()).intValue());
+		
+		if(attrs.containsKey("ScaleWidth"))
+			this.setScaleWidth(((Number)attrs.get("ScaleWidth").toJava()).intValue());
+		
+		this.initFormCallback.run();
+		
+		if(onload != null) onload.handle(interpreter, interpreter.getCurrentFrame());		
+	}
 	
-	public void load(Interpreter interpreter, CallFrame callFrame) throws VbRuntimeException, ArgumentException {
+
+	@Override
+	protected Component createComponent() {
 		frame = new JFrame();
 
 		frame.pack();
 		frame.setLayout(null);
-		
-		this.initFormCallback.run();
-		
-		if(onload != null) onload.handle(interpreter, callFrame);		
+		return frame;
 	}
+
 	
 	@VbMethod
-	public void setClientHeight(Integer clientHeight) {
+	public void setHeight(Integer clientHeight) {
 		clientHeight = toPixel(clientHeight, 1);
 		
 		Insets insets = frame.getInsets();
@@ -59,7 +109,7 @@ public class Form {
 	}
 	
 	@VbMethod
-	public void setClientWidth(Integer clientWidth) {
+	public void setWidth(Integer clientWidth) {
 		clientWidth = toPixel(clientWidth, 1);
 		Insets insets = frame.getInsets();
 		frame.setSize(clientWidth + insets.left + insets.right, frame.getHeight());
@@ -120,13 +170,13 @@ public class Form {
 	}
 
 	@VbMethod
-	public Integer getClientHeight() {
+	public Integer getHeight() {
 		Insets insets = frame.getInsets();
 		return fromPixel(frame.getHeight() - insets.top - insets.bottom, 1);
 	}
 	
 	@VbMethod
-	public Integer getClientWidth() {
+	public Integer getWidth() {
 		Insets insets = frame.getInsets();
 		return fromPixel(frame.getWidth() - insets.left - insets.right, 1);
 	}
@@ -181,24 +231,28 @@ public class Form {
 	}
 
 	@VbMethod
-	public Integer getClientLeft() {
-		return this.scaleHeight;
+	public Integer getLeft() {
+		Point location = this.frame.getLocation();
+		Insets insets = frame.getInsets();
+		return this.fromPixel(location.x - insets.left, 1);
 	}
 	
 	@VbMethod
 	public Integer getClientTop() {
-		return this.scaleWidth;
+		Point location = this.frame.getLocation();
+		Insets insets = frame.getInsets();
+		return this.fromPixel(location.y - insets.top , 1);
 	}
 	
 	@VbMethod
-	public void setClientLeft(Integer clientLeft) {
+	public void setLeft(Integer clientLeft) {
 		clientLeft = toPixel(clientLeft, 1);
 		Insets insets = frame.getInsets();
 		frame.setLocation(clientLeft - insets.left, frame.getY());
 	}
 	
 	@VbMethod
-	public void setClientTop(Integer clientTop) {
+	public void setTop(Integer clientTop) {
 		clientTop = toPixel(clientTop, 1);
 		Insets insets = frame.getInsets();
 		frame.setLocation(frame.getX(), clientTop - insets.top);
@@ -225,5 +279,4 @@ public class Form {
 		}
 	}
 
-	
 }

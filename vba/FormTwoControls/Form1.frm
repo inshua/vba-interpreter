@@ -14,7 +14,7 @@ Begin VB.Form Form1
          Name            =   "ËÎÌו"
          Size            =   18
          Charset         =   134
-         Weight          =   400
+         Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
@@ -40,7 +40,20 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Dim WithEvents fnt As StdFont
+Attribute fnt.VB_VarHelpID = -1
 Private Sub Command1_Click()
     Debug.Print Now
-    Me.Text1 = Now
+    Me.Text1.Text = Now
+    
+    Me.Text1.Font.Size = Me.Text1.Font.Size + 1
+End Sub
+
+Private Sub fnt_FontChanged(ByVal PropertyName As String)
+	Debug.Print "font changed"
+    Debug.Print PropertyName
+End Sub
+
+Private Sub Form_Load()
+    Set fnt = Me.Text1.Font
 End Sub

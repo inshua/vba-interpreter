@@ -1,20 +1,143 @@
+/*******************************************************************************
+ * Copyright (C) 2017 Inshua<inshua@gmail.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
 package org.siphon.visualbasic.runtime.framework.vb;
 
-import javax.swing.JComponent;
+import java.awt.Component;
+import java.awt.Container;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.siphon.visualbasic.ArgumentException;
+import org.siphon.visualbasic.ControlDef;
 import org.siphon.visualbasic.Interpreter;
-import org.siphon.visualbasic.runtime.VbBindObject;
+import org.siphon.visualbasic.runtime.VbBoundObject;
+import org.siphon.visualbasic.runtime.VbRuntimeException;
+import org.siphon.visualbasic.runtime.VbValue;
 import org.siphon.visualbasic.runtime.framework.VbMethod;
+import org.siphon.visualbasic.runtime.framework.stdole.StdFont;
 
-public class Control extends VbBindObject {
+public abstract class Control extends VbBoundObject {
 
-	protected JComponent component;
+	protected Component component;
+	
+	protected String name = "";
 	
 	protected Form form;
 	
-	public void load(Form form, Interpreter interpreter) {
-		
+	protected Integer index = null;		// 控件数组索引  
+	
+	protected String tag = "";
+	
+	protected Control container = null;
+	
+	private StdFont font = new StdFont();
+	
+	public boolean isLoaded() {return this.component != null; }
+	
+	@VbMethod
+	public Integer getIndex() {
+		return index;
 	}
+
+	@VbMethod
+	public void setIndex(Integer index) {
+		this.index = index;
+	}
+
+	public void load(Form form, String name, ControlDef controlDef, Control container, Interpreter interpreter) throws VbRuntimeException, ArgumentException {
+		this.form = form;
+		this.name = name;
+		this.container = container;
+		this.component = this.createComponent();
+		if(this.container != null) {
+			((Container)container.component).add(this.component);
+		}
+		
+		Map<String, VbValue> attrs = controlDef.getAttributes();
+		setSize(attrs);
+		setLocation(attrs);
+		if(attrs.containsKey("Index")) {
+			this.index = ((Number)attrs.get("Index").toJava()).intValue();
+		}
+		
+		if(attrs.containsKey("Tag")) this.tag = (String) attrs.get("Tag").toJava(); 
+		
+		ControlDef fontDef = controlDef.getComplexAttributes().get("Font");
+		if(fontDef != null) this.setFont(fontDef.getAttributes(), interpreter);
+		font.addOnchangeEventListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if(component != null) {
+					component.setFont(font.toJavaFont());
+				}
+			}
+		});
+	}
+
+	private void setLocation(Map<String, VbValue> attrs) {
+		if(attrs.containsKey("Top") && attrs.containsKey("Left")) {
+			Number top = (Number) attrs.get("Top").toJava();
+			Number left =  (Number) attrs.get("Left").toJava();
+			int t = form.toPixel(top.intValue(), 1);
+			int l = form.toPixel(left.intValue(), 1);
+			this.component.setLocation(l, t);
+		}
+	}
+
+	private void setSize(Map<String, VbValue> attrs) {
+		if(attrs.containsKey("Width") && attrs.containsKey("Height")) {
+			Number width = (Number) attrs.get("Width").toJava();
+			Number height = (Number) attrs.get("Height").toJava();
+			
+			int w = form.toPixel(width.intValue(), 1);
+			int h = form.toPixel(height.intValue(), 1);
+			this.component.setSize(w, h);
+		}
+	}
+	
+	private void setFont(Map<String, VbValue> attributes, Interpreter interpreter) throws VbRuntimeException, ArgumentException {
+		String name = (String) attributes.get("Name").toJava();
+		Number size = (Number) attributes.get("Size").toJava();
+		Number charset = (Number) attributes.get("Charset").toJava();
+		Number weigth = (Number) attributes .get("Weight").toJava();
+		Number underline = (Number) attributes.get("Underline").toJava();
+		Number italic = (Number) attributes.get("Italic").toJava();
+		Number strikethrough = (Number) attributes.get("Strikethrough").toJava();
+        
+		font.setName(interpreter, interpreter.getCurrentFrame(), name);
+		font.setSize(interpreter, interpreter.getCurrentFrame(), size.doubleValue());
+		font.setCharset(interpreter, interpreter.getCurrentFrame(), charset.intValue());
+		font.setWeight(interpreter, interpreter.getCurrentFrame(), weigth.intValue());
+		font.setUnderline(interpreter, interpreter.getCurrentFrame(), !underline.equals(0));
+		font.setItalic(interpreter, interpreter.getCurrentFrame(), !italic.equals(0));
+		font.setStrikethrough(interpreter, interpreter.getCurrentFrame(), !strikethrough.equals(0));
+		
+		if(this.component != null) this.component.setFont(font.toJavaFont());
+	}
+
+	
+	protected abstract Component createComponent();
 	
 	@VbMethod
 	public Integer getTop() {
@@ -55,5 +178,30 @@ public class Control extends VbBindObject {
 	public void setWidth(Integer width) {
 		component.setSize(form.toPixel(width, 1), component.getHeight());
 	}
+
+	@VbMethod
+	public String getTag() {
+		return tag;
+	}
+
+	@VbMethod
+	public void setTag(String tag) {
+		this.tag = tag;
+	}
+
+	@VbMethod
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	@VbMethod("Property Get Font() As StdFont")
+	public StdFont getFont() {
+		return this.font;
+	}
+	
 	
 }

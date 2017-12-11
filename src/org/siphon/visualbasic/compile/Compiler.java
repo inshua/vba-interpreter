@@ -1,3 +1,24 @@
+/*******************************************************************************
+ * Copyright (C) 2017 Inshua<inshua@gmail.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
 package org.siphon.visualbasic.compile;
 
 import java.io.File;
@@ -1145,10 +1166,18 @@ public class Compiler {
 		enumDecl.name = enumerationStmt.ambiguousIdentifier().getText();
 		enumDecl.visibility = parseVisibility(enumerationStmt.visibility(), Visibility.PUBLIC);
 
+		Integer start = 0;
 		for (EnumerationStmt_ConstantContext enumConstCtxt : enumerationStmt.enumerationStmt_Constant()) {
 			try {
-				ConstDecl constDecl = new ConstDecl(moduleDecl.getLibrary(), moduleDecl,
-						parseConstValueExpr(enumConstCtxt.constValueExpr(), moduleDecl, null));
+				VbValue v = null;
+				if(enumConstCtxt.constValueExpr() != null) {
+					v = parseConstValueExpr(enumConstCtxt.constValueExpr(), moduleDecl, null);
+					start = ((Number)v.toJava()).intValue() + 1;
+				} else {
+					v = VbValue.fromJava(start);
+					start ++;
+				}
+				ConstDecl constDecl = new ConstDecl(moduleDecl.getLibrary(), moduleDecl, v);
 
 				String name = enumConstCtxt.ambiguousIdentifier().getText();
 
@@ -1403,7 +1432,11 @@ public class Compiler {
 		throw new UnsupportedOperationException("");
 	}
 
-	private VbValue findConstValue(ConstValueExprContext valueStmt, ModuleDecl module, MethodDecl method,
+	VbValue findConstValue(String complexName, ModuleDecl module, MethodDecl method) throws AmbiguousIdentifierException, NotMatchException, NotFoundException {
+		return names.findAccessibleConst(complexName, module.getLibrary()).constValue;
+	}
+	
+	VbValue findConstValue(ConstValueExprContext valueStmt, ModuleDecl module, MethodDecl method,
 			List<AmbiguousIdentifierContext> ids) throws CompileException {
 		try {
 			if (ids.size() == 1) {
@@ -2021,8 +2054,9 @@ public class Compiler {
 		}
 		return false;
 	}
+	
 
-	VbDecl findDeclInScope(String varName, MethodDecl method, boolean thisAsMethod)
+	VbDecl findMemberDeclInScope(String varName, MethodDecl method, boolean thisAsMethod)
 			throws AmbiguousIdentifierException, NotMatchException, NotFoundException {
 		varName = varName.toUpperCase();
 		if (method.variables.containsKey(varName)) {
@@ -2040,8 +2074,8 @@ public class Compiler {
 			return names.findAccessibleMemberDecl(varName, method.module, method.module.getLibrary(), false, ModuleMemberDecl.class);
 		}
 	}
-
-	VbDecl findDeclInScope(ParserRuleContext ast, MethodDecl method, boolean thisAsMethod) throws CompileException {
+	
+	VbDecl findMemberDeclInScope(ParserRuleContext ast, MethodDecl method, boolean thisAsMethod) throws CompileException {
 		boolean isKeyword = false;
 		if (ast instanceof AmbiguousIdentifierContext) {
 			AmbiguousIdentifierContext ambiguousId = (AmbiguousIdentifierContext) ast;
@@ -2063,7 +2097,7 @@ public class Compiler {
 			}
 		}
 		try {
-			return this.findDeclInScope(varName, method, false);
+			return this.findMemberDeclInScope(varName, method, false);
 
 		} catch (NotMatchException e) {
 			throw method.module.newCompileException(ast, CompileException.SHOULD_BE, ast, "variable or const");
